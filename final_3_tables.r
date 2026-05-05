@@ -159,3 +159,28 @@ table3 <- tbl_svysummary(
 table3_gt <- as_gt(table3)
 gtsave(table3_gt, "exports/table3.html")
 gtsave(table3_gt, "exports/table3.docx")
+
+# ---- FIGURE FROM TABLE 3 ----
+# Create a bar plot of the distribution of ADHD medication types by year
+# replace the dplyr-on-survey.design pipeline with svytable -> tibble
+table3_data <- svytable(~ year + drug_names, design_step5) %>%
+  as.data.frame() %>%
+  rename(year = year, drug_names = drug_names, n = Freq) %>%
+  group_by(year) %>%
+  mutate(p = n / sum(n) * 100) %>%
+  ungroup()
+
+fig_table3 <- ggplot(table3_data, aes(x = drug_names, y = p, fill = factor(year))) +
+  geom_col(position = position_dodge(width = 0.9)) +
+  scale_fill_manual(values = c("#08306B", "#6BAED6")) +
+  labs(
+    x = "ADHD Medication Type",
+    y = "Proportion of ADHD Cohort (%)",
+    fill = "Year"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+fig_table3

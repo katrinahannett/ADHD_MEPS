@@ -18,7 +18,9 @@ selection_people <- fyc_clean %>%
     .groups = "drop"
   )
 
-selection_counts$total <- nrow(fyc_clean)
+selection_counts$total <- selection_people %>% 
+  distinct(DUPERSID) %>%
+  nrow()
 
 # # Find DUPERSIDs that appear in both 2019 and 2021 - don't do this
 # selection_counts$step1 <- selection_people %>% 
@@ -29,12 +31,14 @@ selection_counts$total <- nrow(fyc_clean)
 # select those <= 65 years old
 selection_counts$step2 <- selection_people %>% 
   filter(age_ok) %>% 
+  distinct(DUPERSID) %>%
   nrow()
 
 # Among those in both years and <= 65,
 # select those without Medicare
 selection_counts$step3 <- selection_people %>% 
   filter(age_ok, no_medicare) %>% 
+  distinct(DUPERSID) %>%
   nrow()
 
 # Among those in both years, <= 65,
@@ -42,6 +46,7 @@ selection_counts$step3 <- selection_people %>%
 # select those with ADHD diagnosis
 selection_counts$step4 <- selection_people %>% 
   filter(age_ok, no_medicare, adhd_dx) %>% 
+  distinct(DUPERSID) %>%
   nrow()
 
 # Among those in both years, <= 65,
@@ -50,6 +55,7 @@ selection_counts$step4 <- selection_people %>%
 # (adhd_pmed_flag == 1) in either year
 selection_counts$step5 <- selection_people %>% 
   filter(age_ok, no_medicare, adhd_dx, any_adhd_pmed) %>% 
+  distinct(DUPERSID) %>%
   nrow()
 
 options(survey.lonely.psu = "adjust")
@@ -73,6 +79,10 @@ ids_step5 <- selection_people %>%
 
 design_step4 <- subset(design, DUPERSID %in% ids_step4)
 design_step5 <- subset(design, DUPERSID %in% ids_step5)
+
+# get weighted and unweighted counts from design_step4
+nrow(design_step4$variables)
+sum(weights(design_step4))
 
 # ---- FLOWCHART ----
 # Create flowchart data

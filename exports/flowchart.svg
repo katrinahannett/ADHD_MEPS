@@ -14,7 +14,7 @@
 <title>a</title>
 <path fill="#add8e6" stroke="#000000" d="M312,-371.9005C312,-371.9005 12,-371.9005 12,-371.9005 6,-371.9005 0,-365.9005 0,-359.9005 0,-359.9005 0,-347.2995 0,-347.2995 0,-341.2995 6,-335.2995 12,-335.2995 12,-335.2995 312,-335.2995 312,-335.2995 318,-335.2995 324,-341.2995 324,-347.2995 324,-347.2995 324,-359.9005 324,-359.9005 324,-365.9005 318,-371.9005 312,-371.9005"/>
 <text text-anchor="middle" x="162" y="-357.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Total records from 2019 and 2021</text>
-<text text-anchor="middle" x="162" y="-342.8" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">N = 56848</text>
+<text text-anchor="middle" x="162" y="-342.8" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">N = 43648</text>
 </g>
 <!-- b -->
 <g id="node2" class="node">
@@ -47,7 +47,7 @@
 <title>x1</title>
 <path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M626,-288.1005C626,-288.1005 376,-288.1005 376,-288.1005 370,-288.1005 364,-282.1005 364,-276.1005 364,-276.1005 364,-263.4995 364,-263.4995 364,-257.4995 370,-251.4995 376,-251.4995 376,-251.4995 626,-251.4995 626,-251.4995 632,-251.4995 638,-257.4995 638,-263.4995 638,-263.4995 638,-276.1005 638,-276.1005 638,-282.1005 632,-288.1005 626,-288.1005"/>
 <text text-anchor="middle" x="501" y="-273.4" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Excluded: Age &gt;65</text>
-<text text-anchor="middle" x="501" y="-259" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">N = 21935</text>
+<text text-anchor="middle" x="501" y="-259" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">N = 8735</text>
 </g>
 <!-- b&#45;&gt;x1 -->
 <g id="edge5" class="edge">
