@@ -73,6 +73,21 @@ model8 <- svyglm(
 
 summary(model8)
 
+# TODO: add residuals, diagnostics, etc.
+m8_residuals <- residuals(model8, type = "deviance")
+plot(m8_residuals, main = "Deviance Residuals", ylab = "Deviance Residuals", xlab = "Index")
+
+# qq plot of resids
+m8_qq <- qqnorm(m8_residuals)
+qqline(m8_residuals, col = "red", lty = "dashed")
+
+# hist of resids
+hist(m8_residuals, breaks = 30, main = "Histogram of Residuals", xlab = "Deviance Residuals")
+
+# plot of resids vs fitted
+plot(m8_fitted, m8_residuals, main = "Residuals vs Fitted Values", xlab = "Fitted Values", ylab = "Deviance Residuals")
+abline(h = 0, lty = "dashed", col = "red")
+
 #Converting to IRRS
 exp(coef(model8))
 
@@ -120,6 +135,19 @@ model9 <- svyglm(
   family = quasipoisson()
 )
 summary(model9)
+
+m9_residuals <- residuals(model9, type = "deviance")
+plot(m9_residuals, main = "Deviance Residuals", ylab = "Deviance Residuals", xlab = "Index")
+
+m9_qq <- qqnorm(m9_residuals)
+qqline(m9_residuals, col = "red", lty = "dashed")
+
+hist(m9_residuals, breaks = 30, main = "Histogram of Residuals", xlab = "Deviance Residuals")
+
+m9_fitted <- fitted(model9)
+plot(m9_fitted, m9_residuals, main = "Residuals vs Fitted Values", xlab = "Fitted Values", ylab = "Deviance Residuals")
+abline(h = 0, lty = "dashed", col = "red")
+
 exp(coef(model9))
 confint.default(model9)
 ci2 <- exp(confint.default(model9))
