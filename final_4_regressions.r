@@ -195,13 +195,13 @@ mk_tbl_combined <- function(model, digits = 2) {
       ~ .x %>%
         mutate(
           irr_ci = sprintf(
-            paste0("%.", digits, "f (%.", digits, "f, %.", digits, "f)"),
+            paste0("%.", digits, "f\n(%.", digits, "f, %.", digits, "f)"),
             estimate, conf.low, conf.high
           ),
           p_value = case_when(
             is.na(p.value) ~ NA_character_,
             p.value < 0.001 ~ "<0.001",
-            TRUE ~ sprintf("%.3f", p.value)
+            TRUE ~ sprintf("%.2f", p.value)
           )
         ) %>%
         select(
@@ -247,6 +247,8 @@ combined_table_gt
 # export
 gtsave(combined_table_gt, "exports/table4.docx")
 gtsave(combined_table_gt, "exports/table4.html")
+
+# ---- CLEANED TABLE ----
 
 results_clean <- results %>%
   mutate(
