@@ -1,28 +1,34 @@
-
 ---
-title: "CMPH 133: Group Project Analysis Template"
-author: Write Your Names Here
+title: "Changes in ADHD Medication Utilization Among U.S. Adults Following COVID-19 Telehealth Expansion: A Population-Based Analysis"
+author: "Brian T Ruan, Simran Rajpal, Katrina Hannett, Nitya Koduri, Shikhar Shrestha"
 date: "`r Sys.Date()`"
-output: 
-  html_document:
-    toc: TRUE
+output:
+  pdf_document:
+    toc: true
     toc_depth: 4
-    toc_float: TRUE
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
     code_folding: hide
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  fig.width = 5.5,
+  fig.height = 3.5,
+  out.width = "70%"
+)
 ```
 
 
 
 <!-- This is how you add comments in your Markdown file. Anything appearing here will not appear when you Knit this file. If you need to leave comments for yourself as you work on this document, you can use this technique.-->
-
-
-**Change the title to something more meaningful**
-
-
 
 
 ### Ready the Workspace
@@ -31,6 +37,45 @@ knitr::opts_chunk$set(echo = TRUE)
 # include all your packages/libraries in this code chunk
 
 # library(ggplot2) 
+
+# ---- SETUP ----
+# Package installation and library loading.
+
+# # Only need to run these once (uncomment if needed)
+# install.packages("foreign")
+# install.packages("devtools")
+# install.packages("tidyverse")
+# install.packages("readr")
+# install.packages("readxl")
+# install.packages("haven")
+# install.packages("dplyr")
+# install.packages("gtsummary")
+# isntall.packages("gt")
+# install.packages("stringr")
+# install.packages("survey")
+# install.packages("DiagrammeR")
+# install.packages("DiagrammeRsvg")
+# install.packages("rsvg")
+
+# # Run these every time you restart R:
+library(foreign)
+library(devtools)
+library(tidyverse)
+library(readr)
+library(readxl)
+library(haven)
+library(dplyr)
+library(gtsummary)
+library(gt)
+library(stringr)
+library(survey)
+library(glue)
+library(DiagrammeR)
+library(DiagrammeRsvg)
+library(rsvg)
+
+# only run once if needed
+# install_github("sshrestha274/meps_r_pkg/MEPS")
 
 ```
 
@@ -59,8 +104,642 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-```{r import and clean dataset, results='hide', eval=FALSE}
+```{r import and clean dataset, results='hide', eval=TRUE, warning=FALSE, message=FALSE}
 # Import your dataset here, and then clean it in this code chunk
+
+library(MEPS)
+
+# ---- LOAD DATA HELPER FUNCTION ----
+# This function will help us download the data and save to an RDS file if we 
+# haven't already done so already.
+
+load_meps_year <- function(year) {
+  short_year <- substr(year, 3, 4)
+  
+  perwt  <- paste0("PERWT",  short_year, "F")
+  ttlp   <- paste0("TTLP",   short_year, "X")
+  povcat <- paste0("POVCAT", short_year)
+  inscov <- paste0("INSCOV", short_year)
+  insurc <- paste0("INSURC", short_year)
+  totslf <- paste0("TOTSLF", short_year)
+  obtotv <- paste0("OBTOTV", short_year)
+  optotv <- paste0("OPTOTV", short_year)
+  ipdis  <- paste0("IPDIS",  short_year)
+  ipngtd <- paste0("IPNGTD", short_year)
+  rxtot  <- paste0("RXTOT",  short_year)
+  ertot  <- paste0("ERTOT",  short_year)
+  
+  vars_to_keep <- c(
+    "DUPERSID", "PANEL", "VARSTR", "VARPSU", perwt, ttlp,
+    "SEX", "AGE53X", "RACETHX", "MARRY53X", "REGION53",
+    "EDUYRDG", "EDUCYR", povcat,
+    "PCS42", "MCS42", "VPCS42", "VMCS42",
+    "HAVEUS42", inscov, insurc, "MCAID53X",
+    totslf, obtotv, optotv, ipdis, ipngtd, rxtot, ertot
+  )
+  
+  fyc <- read_MEPS(year = year, type = "FYC") %>%
+    select(any_of(vars_to_keep)) %>%
+    rename(
+      PERWT  = all_of(perwt),
+      TTLP   = all_of(ttlp),
+      POVCAT = all_of(povcat),
+      INSCOV = all_of(inscov),
+      TOTSLF = all_of(totslf),
+      OBTOTV = all_of(obtotv),
+      OPTOTV = all_of(optotv),
+      IPDIS  = all_of(ipdis),
+      IPNGTD = all_of(ipngtd),
+      RXTOT  = all_of(rxtot),
+      ERTOT  = all_of(ertot)
+    )
+  
+  cond <- read_MEPS(year = year, type = "COND")
+  
+  rx <- read_MEPS(year = year, type = "RX")
+  
+  link <- read_MEPS(year = year, type = "CLNK")
+  
+  list(fyc = fyc, cond = cond, rx = rx, link = link)
+
+}
+
+save_all_years <- function(years = 2017:2023, 
+                           out_file = file.path("data", 
+                                                "meps_all_years.rds")) {
+  if (!dir.exists("data")) dir.create("data", recursive = TRUE)
+  
+  all_data <- list()
+  for (yr in years) {
+    d <- load_meps_year(yr)
+    suffix <- paste0("_", yr)
+    all_data[[paste0("fyc", suffix)]]  <- d$fyc
+    all_data[[paste0("cond", suffix)]] <- d$cond
+    all_data[[paste0("rx", suffix)]]   <- d$rx
+    all_data[[paste0("link", suffix)]] <- d$link
+  }
+  
+  saveRDS(all_data, file = out_file)
+  invisible(out_file)
+}
+
+# Save the MEPS data into an accessible format
+
+# save_all_years()
+
+# ---- DATA CLEANING ----
+# Process:
+# 1. Read in the datasets of interest
+# 2. Clean the FYC data which contains demographic data
+# 3. Sort through the NDC FDA data to get drug classes
+# 4. USE CLINK files to link ADHD dx-specific rx
+# 5. Merge datasets
+
+# ---- READ IN DATA ----
+all_data <- readRDS(file.path("data", "meps_all_years.rds"))
+
+years_of_interst <- c(2019, 2021)
+
+for (year in years_of_interst) {
+  assign(paste0("fyc_", year), all_data[[paste0("fyc_", year)]])
+  assign(paste0("cond_", year), all_data[[paste0("cond_", year)]])
+  assign(paste0("rx_", year), all_data[[paste0("rx_", year)]])
+  assign(paste0("link_", year), all_data[[paste0("link_", year)]])
+}
+
+rm(all_data)
+gc()
+
+# ---- CLEAN FYC ----
+# in fyc_2019, some things are inappropriately haven labelled
+# convert haven labels to numeric
+inappropriate_labels <- c("VPCS42", "VMCS42", "OBTOTV", "OPTOTV", "IPDIS", 
+                          "IPNGTD", "ERTOT")
+fyc_2019 <- fyc_2019 %>%
+  mutate(across(any_of(inappropriate_labels), ~ as.numeric(as.character(.x))))
+fyc_2021 <- fyc_2021 %>%
+  mutate(across(any_of(inappropriate_labels), ~ as.numeric(as.character(.x))))
+
+# convert haven labels to factors in df fyc 
+# remove preceding numbers from factor levels
+clean_labels <- function(x) {
+  if (haven::is.labelled(x)) x <- haven::as_factor(x)
+  if (is.factor(x)) levels(x) <- gsub("^[0-9]+\\s*", "", levels(x))
+  x
+}
+
+fyc_2019 <- fyc_2019 %>% mutate(
+  across(where(~ haven::is.labelled(.x) || is.factor(.x)), clean_labels))
+fyc_2021 <- fyc_2021 %>% mutate(
+  across(where(~ haven::is.labelled(.x) || is.factor(.x)), clean_labels))
+
+# dollars: convert to 2021 dollars using CPI
+cpi_2019  <- 256.974
+cpi_2021  <- 278.802
+cpi_ratio <- cpi_2021 / cpi_2019
+
+fyc_2019$income_2021 <- fyc_2019$TTLP * cpi_ratio
+fyc_2019$totslf_2021 <- fyc_2019$TOTSLF * cpi_ratio
+fyc_2019$obtotv_2021 <- fyc_2019$OBTOTV * cpi_ratio
+fyc_2019$optotv_2021 <- fyc_2019$OPTOTV * cpi_ratio
+fyc_2019$rxtot_2021  <- fyc_2019$RXTOT  * cpi_ratio
+fyc_2019$ertot_2021  <- fyc_2019$ERTOT  * cpi_ratio
+
+fyc_2021$income_2021 <- fyc_2021$TTLP
+fyc_2021$totslf_2021 <- fyc_2021$TOTSLF
+fyc_2021$obtotv_2021 <- fyc_2021$OBTOTV
+fyc_2021$optotv_2021 <- fyc_2021$OPTOTV
+fyc_2021$rxtot_2021  <- fyc_2021$RXTOT
+fyc_2021$ertot_2021  <- fyc_2021$ERTOT
+
+# recode
+
+# rename INSURC19 in fyc_2019 to INSURC
+# rename INSURC21 in fyc_2021 to INSURC
+fyc_2019 <- fyc_2019 %>% rename(INSURC = INSURC19)
+fyc_2021 <- fyc_2021 %>% rename(INSURC = INSURC21)
+
+recode_fyc <- function(df) {
+  df %>% 
+    mutate(
+      sex = case_when(
+        SEX == "MALE" ~ "Male",
+        SEX == "FEMALE" ~ "Female",
+        TRUE ~ NA_character_
+      ),
+      ethnicity = case_when(
+        RACETHX == "HISPANIC" ~ "Hispanic",
+        TRUE ~ "Non-Hispanic"
+      ),
+      race = case_when(
+        RACETHX == "NON-HISPANIC ASIAN ONLY" ~ "Asian",
+        RACETHX == "NON-HISPANIC BLACK ONLY" ~ "Black",
+        RACETHX == "NON-HISPANIC OTHER RACE OR MULTIPLE RACE" ~ "Other",
+        RACETHX == "NON-HISPANIC WHITE ONLY" ~ "White",
+        TRUE ~ NA_character_
+      ),
+      race = factor(race, levels = c("White", "Black", "Asian", "Other")),
+      marital = case_when(
+        MARRY53X %in% c("-1 INAPPLICABLE", "-7 REFUSED", "-8 DK") 
+          ~ NA_character_,
+        MARRY53X %in% c("MARRIED", "MARRIED IN ROUND") 
+          ~ "Married",
+        TRUE 
+          ~ "Not married"
+      ),
+      REGION53 = na_if(REGION53, "-1 INAPPLICABLE"),
+      education = case_when(
+        EDUCYR %in% c("-1 INAPPLICABLE", "-7 REFUSED", 
+                      "-8 DK", "-15 CANNOT BE COMPUTED") 
+                      ~ NA_character_,
+        EDUCYR %in% c("NO SCHOOL/KINDERGARTEN ONLY", "1", "2", "3", "4", "5", 
+                      "6", "7", "8", "9", "10", "11", "GRADE 12") 
+                      ~ "High school graduation or less",
+        EDUCYR %in% c("1 YEAR COLLEGE", "2 YEARS COLLEGE", "3 YEARS COLLEGE", 
+                      "4 YEARS COLLEGE", "5+ YEARS COLLEGE") 
+                      ~ "College education or greater",
+        TRUE ~ NA_character_
+      ),
+      insurance = case_when(
+        INSURC %in% c("<65 UNINSURED", "65+ UNINSURED") 
+          ~ "Uninsured",
+        INSURC == "<65 ANY PRIVATE" & MCAID53X != "YES" 
+          ~ "Private only",
+        INSURC == "<65 ANY PRIVATE" & MCAID53X == "YES" 
+          ~ "Medicaid, with private",
+        INSURC == "<65 PUBLIC ONLY" & MCAID53X == "YES" 
+          ~ "Medicaid only",
+        INSURC == "<65 PUBLIC ONLY" & MCAID53X != "YES" 
+          ~ "Other public",
+        INSURC == "65+ EDITED MEDICARE AND PRIVATE" & MCAID53X != "YES" 
+          ~ "Medicare, with private",
+        INSURC == "65+ EDITED MEDICARE AND PRIVATE" & MCAID53X == "YES" 
+          ~ "Medicare, dual-eligible",
+        INSURC == "65+ EDITED MEDICARE ONLY" & MCAID53X != "YES" 
+          ~ "Medicare only",
+        INSURC == "65+ EDITED MEDICARE ONLY" & MCAID53X == "YES" 
+          ~ "Medicare, dual-eligible",
+        INSURC == "65+ EDITED MEDICARE AND OTH PUB ONLY" & MCAID53X == "YES" 
+          ~ "Medicare, dual-eligible",
+        INSURC == "65+ EDITED MEDICARE AND OTH PUB ONLY" & MCAID53X != "YES" 
+          ~ "Medicare, with other public",
+        INSURC == "65+ NO MEDICARE AND ANY PUBLIC/PRIVATE" & MCAID53X == "YES"
+          ~ "Medicaid, with private",
+        INSURC == "65+ NO MEDICARE AND ANY PUBLIC/PRIVATE" & MCAID53X != "YES" 
+          ~ "Private only",
+        INSCOV == "UNINSURED" ~ "Uninsured",
+        INSCOV == "ANY PRIVATE" ~ "Private only",
+        INSCOV == "PUBLIC ONLY" & MCAID53X == "YES" ~ "Medicaid only",
+        INSCOV == "PUBLIC ONLY" & MCAID53X != "YES" ~ "Other public",
+        TRUE ~ NA_character_
+      ),
+      insurance = factor(insurance, levels = c(
+        "Private only",
+        "Medicaid only",
+        "Medicaid, with private",
+        "Medicare only",
+        "Medicare, with private",
+        "Medicare, with other public",
+        "Medicare, dual-eligible",
+        "Other public",
+        "Uninsured"
+      )),
+      medicaid = case_when(
+        insurance == "Medicaid only" ~ "Medicaid only",
+        insurance == "Medicaid, with private" 
+          ~ "Medicaid, with private, non-Medicare",
+        TRUE ~ "No Medicaid"
+      ),
+      medicare = case_when(
+        insurance %in% c("Medicare, with private", "Medicare, dual-eligible", 
+                         "Medicare, with other public", "Medicare only") 
+                          ~ "Medicare, any",
+        TRUE ~ "No Medicare"
+      ),
+      private_ins = case_when(
+        insurance == "Private only" ~ "Private only",
+        TRUE ~ "Other/uninsured"
+      ),
+      has_insurance = case_when(
+        INSCOV == "UNINSURED" ~ "No insurance",
+        INSCOV %in% c("ANY PRIVATE", "PUBLIC ONLY") ~ "Has insurance",
+        TRUE ~ NA_character_
+      ),
+      povcat = case_when(
+        POVCAT %in% c("POOR/NEGATIVE", "NEAR POOR") ~ "Very low income",
+        POVCAT == "LOW INCOME" ~ "Low income",
+        POVCAT == "MIDDLE INCOME" ~ "Middle income",
+        POVCAT == "HIGH INCOME" ~ "High income",
+        TRUE ~ NA_character_
+      ),
+      povcat = factor(povcat, levels = c(
+        "Very low income", 
+        "Low income", 
+        "Middle income", 
+        "High income"
+      )),
+      region = case_when(
+        REGION53 == "NORTHEAST" ~ "Northeast",
+        REGION53 == "MIDWEST" ~ "Midwest",
+        REGION53 == "SOUTH" ~ "South",
+        REGION53 == "WEST" ~ "West",
+        TRUE ~ NA_character_
+      )
+    )
+}
+
+fyc_2019 <- recode_fyc(fyc_2019)
+fyc_2021 <- recode_fyc(fyc_2021)
+
+# ---- SORT NDC ----
+# load ndc
+files <- list.files("data/ndc", pattern = "\\.csv$", full.names = TRUE)
+
+ndc_all <- files %>% 
+  map_dfr(
+    ~ read_csv(.x, col_types = cols(.default = col_character())),
+    .id = "source_file"
+  ) %>% 
+  distinct() %>% 
+  filter(
+    str_detect(`Pharm Class`, "Central Nervous System Stimulant") |
+      str_detect(
+        toupper(`Proprietary Name`),
+        "ATOMOXETINE|STRATTERA|VILOXAZINE|QELBREE|GUANFACINE|INTUNIV|TENEX||CLONIDINE|KAPVAY|CATAPRES"
+      )
+  )
+
+ndc_all$formulation <- ifelse(
+  str_detect(toupper(ndc_all$`Dosage Form`), "EXTENDED"),
+  "Extended",
+  "Normal"
+)
+
+ndc_stim <- ndc_all %>%
+  select(
+    `Proprietary Name`,
+    `NDC Package Code`,
+    `Dosage Form`,
+    formulation
+  ) %>%
+  distinct()
+
+# NDC adds - for legibility; remove to be compatible with MEPS
+ndc_stim$ndc_compatible <- str_remove_all(ndc_stim$`NDC Package Code`, "-")
+
+# add leading 0 to match MEPS RX dataset
+ndc_stim <- ndc_stim %>% 
+  mutate(ndc_compatible = str_pad(ndc_compatible, width = 11, 
+                                  side = "left", pad = "0"))
+
+# in rx_2019 and rx_2021, remove year specific suffix (e.g., RXSF19X -> RXSF)
+# year-specific vars: RXSF, RXMR, RXMD, RXPV, RXVA, 
+#                     RXTR, RXOF, RXSL, RXWC, RXOT, RXXP
+rx_2019 <- rx_2019 %>% rename_with(~ str_remove(.x, "19X$"), matches("19X$"))
+rx_2021 <- rx_2021 %>% rename_with(~ str_remove(.x, "21X$"), matches("21X$"))
+
+# convert to 2021 dollars using CPI
+cpi_2019  <- 256.974
+cpi_2021  <- 278.802
+cpi_ratio <- cpi_2021 / cpi_2019
+rx_2019 <- rx_2019 %>%
+  mutate(
+    RXSF = RXSF * cpi_ratio,
+    RXMR = RXMR * cpi_ratio,
+    RXMD = RXMD * cpi_ratio,
+    RXPV = RXPV * cpi_ratio,
+    RXVA = RXVA * cpi_ratio,
+    RXTR = RXTR * cpi_ratio,
+    RXOF = RXOF * cpi_ratio,
+    RXSL = RXSL * cpi_ratio,
+    RXWC = RXWC * cpi_ratio,
+    RXOT = RXOT * cpi_ratio,
+    RXXP = RXXP * cpi_ratio
+  )
+
+rx_2019_ndc <- list(rx_2019 = rx_2019) %>%
+  imap_dfr(
+    ~ .x %>%
+      left_join(ndc_stim, join_by(RXNDC == ndc_compatible), 
+                          relationship = "many-to-many") %>%
+      filter(!is.na(`NDC Package Code`)) %>%
+      mutate(year = as.integer(str_remove(.y, "^rx_")))
+  )
+
+rx_2021_ndc <- list(rx_2021 = rx_2021) %>%
+  imap_dfr(
+    ~ .x %>%
+      left_join(ndc_stim, join_by(RXNDC == ndc_compatible), 
+                          relationship = "many-to-many") %>%
+      filter(!is.na(`NDC Package Code`)) %>%
+      mutate(year = as.integer(str_remove(.y, "^rx_")))
+  )
+
+# some things are inappropriately haven labelled; convert to numeric first
+# and correct labels as needed
+
+# RXBEGMM: convert to numeric and <0 to NA
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  RXBEGMM = as.numeric(as.character(RXBEGMM)))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  RXBEGMM = as.numeric(as.character(RXBEGMM)))
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  RXBEGMM = ifelse(RXBEGMM < 0, NA, RXBEGMM))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  RXBEGMM = ifelse(RXBEGMM < 0, NA, RXBEGMM))
+
+# RXBEGYRX: convert to numeric and <0 to NA
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  RXBEGYRX = as.numeric(as.character(RXBEGYRX)))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  RXBEGYRX = as.numeric(as.character(RXBEGYRX)))
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  RXBEGYRX = ifelse(RXBEGYRX < 0, NA, RXBEGYRX))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  RXBEGYRX = ifelse(RXBEGYRX < 0, NA, RXBEGYRX))
+
+# RXDAYSUP: convert to numeric and <0 to NA
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  RXDAYSUP = as.numeric(as.character(RXDAYSUP)))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  RXDAYSUP = as.numeric(as.character(RXDAYSUP)))
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  RXDAYSUP = ifelse(RXDAYSUP < 1, NA, RXDAYSUP))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  RXDAYSUP = ifelse(RXDAYSUP < 1, NA, RXDAYSUP))
+
+# for some reason, PRN gets coded as 999; convert to NA
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  RXDAYSUP = ifelse(RXDAYSUP == 999, NA, RXDAYSUP))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  RXDAYSUP = ifelse(RXDAYSUP == 999, NA, RXDAYSUP))
+
+rx_2019_ndc <- rx_2019_ndc %>% mutate(
+  across(where(~ haven::is.labelled(.x) || is.factor(.x)), clean_labels))
+rx_2021_ndc <- rx_2021_ndc %>% mutate(
+  across(where(~ haven::is.labelled(.x) || is.factor(.x)), clean_labels))
+
+# ---- LINKAGE ----
+# -----------------------------------------------------------------------------
+# Code credit: 
+# github.com/HHS-AHRQ/MEPS/blob/master/R/workshop_exercises/cond_pmed_2020.R
+#
+# National totals:
+#   - Total number of people w PMED purchase for ADHD
+#   - Total PMED fills for ADHD
+#   - Total PMED expenditures for ADHD
+#
+# Per-person averages among ppl with any PMED for ADHD
+#   - Avg PMED fills for ADHD, by SEX and Poverty (POVCAT)
+#   - Avg PMED exp for ADHD per person w/ ADHD fills, by SEX and pov (POVCAT)
+# 
+# Input files:
+#   - 2019/2021 Prescribed Medicines file         rx_2019 and rx_2021
+#   - 2019/2021 Conditions file                   cond_2019 and cond_2021
+#   - 2019/2021 CLNK: Condition-Event Link file   link_2019 and link_2021
+#   - 2019/2021 Full-Year Consolidated file       fyc_2019 and fyc_2021
+# -----------------------------------------------------------------------------
+
+# Set survey option for lonely PSUs
+options(survey.lonely.psu='adjust')
+options(survey.adjust.domain.lonely = TRUE)
+
+# >> For PMED file, rename LINKIDX to EVNTIDX to merge with Conditions
+rx_2019_ndc <- rx_2019_ndc %>% rename(EVNTIDX = LINKIDX)
+rx_2021_ndc <- rx_2021_ndc %>% rename(EVNTIDX = LINKIDX)
+
+# Prepare data for estimation -------------------------------------------------
+
+# Subset condition records to ADHD (any ICD10CDX = "F90")
+adhd_2019 <- cond_2019 %>% 
+  filter(str_starts(ICD10CDX, "F90"))
+
+adhd_2021 <- cond_2021 %>% 
+  filter(str_starts(ICD10CDX, "F90"))
+
+# Merge ADHD conditions with PMED file, using CLNK as crosswalk -----
+# De-duplicate on EVNTIDX (so we don't 'double-count' events)
+
+adhd_clnk_2019 <- adhd_2019 %>% 
+  inner_join(link_2019, by = c("DUPERSID", "CONDIDX", "PANEL"))
+adhd_clnk_2021 <- adhd_2021 %>% 
+  inner_join(link_2021, by = c("DUPERSID", "CONDIDX", "PANEL"))
+adhd_clnk_distinct_2019 <- adhd_clnk_2019 %>% 
+  distinct(PANEL, DUPERSID, EVNTIDX, ICD10CDX, CCSR1X, EVENTYPE)
+adhd_clnk_distinct_2021 <- adhd_clnk_2021 %>% 
+  distinct(PANEL, DUPERSID, EVNTIDX, ICD10CDX, CCSR1X, EVENTYPE)
+
+# apply clean_labels to adhd_clnk_distinct for PANEL variable
+adhd_clnk_distinct_2019 <- adhd_clnk_distinct_2019 %>% mutate(
+  PANEL = clean_labels(PANEL))
+adhd_clnk_distinct_2021 <- adhd_clnk_distinct_2021 %>% mutate(
+  PANEL = clean_labels(PANEL))
+
+adhd_merged_2019 <- adhd_clnk_distinct_2019 %>% 
+  inner_join(rx_2019_ndc, by = c("DUPERSID", "EVNTIDX", "PANEL"))
+adhd_merged_2021 <- adhd_clnk_distinct_2021 %>% 
+  inner_join(rx_2021_ndc, by = c("DUPERSID", "EVNTIDX", "PANEL"))
+
+# QC: check that EVENTYPE = 8 PRESCRIBED MEDICINE for all rows
+# TRUE
+
+# QC: View top PMEDS for ADHD
+adhd_merged_2019 %>% 
+    count(RXDRGNAM) %>% 
+    arrange(-n)
+
+# QC: View top PMEDS for ADHD
+adhd_merged_2021 %>% 
+    count(RXDRGNAM) %>% 
+    arrange(-n)
+
+# Roll up to person-level data ------------------------------------------------
+
+drug_by_pers_2019 <- adhd_merged_2019 %>% 
+  group_by(DUPERSID) %>% 
+  summarize(
+    adhd_fills = n_distinct(RXRECIDX),
+    adhd_days_supp = sum(RXDAYSUP, na.rm = TRUE),
+    adhd_total_spend = sum(RXXP, na.rm = TRUE),
+    adhd_oop = sum(RXSF, na.rm = TRUE),
+    adhd_private = sum(RXPV, na.rm = TRUE),
+    adhd_medicaid = sum(RXMD, na.rm = TRUE),
+    n_drug_names = n_distinct(RXDRGNAM),
+    n_formulations = n_distinct(formulation),
+    drug_names = paste(sort(unique(na.omit(RXDRGNAM))), collapse = "; "),
+    formulations = paste(sort(unique(na.omit(formulation))), collapse = "; "),
+    pill_qty_total = sum(RXQUANTY, na.rm = TRUE),
+    pill_qty_mean = mean(RXQUANTY, na.rm = TRUE),
+    .groups = "drop") %>% 
+  mutate(adhd_days_supp = ifelse(adhd_days_supp == 0, NA, adhd_days_supp)) %>%
+  mutate(adhd_pmed_flag = 1) %>% 
+  mutate(oop_share = if_else(adhd_total_spend > 0, 
+                             adhd_oop / adhd_total_spend * 100, NA_real_))
+
+drug_by_pers_2021 <- adhd_merged_2021 %>% 
+  group_by(DUPERSID) %>% 
+  summarize(
+    adhd_fills = n_distinct(RXRECIDX),
+    adhd_days_supp = sum(RXDAYSUP, na.rm = TRUE),
+    adhd_total_spend = sum(RXXP, na.rm = TRUE),
+    adhd_oop = sum(RXSF, na.rm = TRUE),
+    adhd_private = sum(RXPV, na.rm = TRUE),
+    adhd_medicaid = sum(RXMD, na.rm = TRUE),
+    n_drug_names = n_distinct(RXDRGNAM),
+    n_formulations = n_distinct(formulation),
+    drug_names = paste(sort(unique(na.omit(RXDRGNAM))), collapse = "; "),
+    formulations = paste(sort(unique(na.omit(formulation))), collapse = "; "),
+    pill_qty_total = sum(RXQUANTY, na.rm = TRUE),
+    pill_qty_mean = mean(RXQUANTY, na.rm = TRUE),
+    .groups = "drop") %>% 
+  mutate(adhd_days_supp = ifelse(adhd_days_supp == 0, NA, adhd_days_supp)) %>%
+  mutate(adhd_pmed_flag = 1) %>% 
+  mutate(oop_share = if_else(adhd_total_spend > 0, 
+                             adhd_oop / adhd_total_spend * 100, NA_real_))
+
+# Merge onto FYC file ---------------------------------------------------------
+#  >> Need to capture all Strata (VARSTR) and PSUs (VARPSU) for all MEPS sample
+#     persons for correct variance estimation
+
+fyc_adhd_merged_2019 <- fyc_2019 %>% 
+  full_join(drug_by_pers_2019, by="DUPERSID") %>% 
+  replace_na(list(adhd_pmed_flag = 0))
+
+fyc_adhd_merged_2021 <- fyc_2021 %>% 
+  full_join(drug_by_pers_2021, by="DUPERSID") %>% 
+  replace_na(list(adhd_pmed_flag = 0))
+
+# QC: should have same number of rows as FYC file
+# crash if false
+stopifnot(nrow(fyc_2019) == nrow(fyc_adhd_merged_2019) && 
+          nrow(fyc_2021) == nrow(fyc_adhd_merged_2021))
+  
+# QC: adhd_pmed_flag counts should be equal to rows in drug_by_pers
+flags_2019 <- fyc_adhd_merged_2019 %>% filter(
+  adhd_pmed_flag == 1) %>% nrow()
+flags_2021 <- fyc_adhd_merged_2021 %>% filter(
+  adhd_pmed_flag == 1) %>% nrow()
+stopifnot(nrow(drug_by_pers_2019) == flags_2019 && 
+          nrow(drug_by_pers_2021) == flags_2021)
+
+# Clean up: remove intermediate dfs
+rm(
+  adhd_2019, adhd_2021, 
+  adhd_clnk_2019, adhd_clnk_2021, 
+  adhd_clnk_distinct_2019, adhd_clnk_distinct_2021,
+  adhd_merged_2019, adhd_merged_2021, 
+  drug_by_pers_2019, drug_by_pers_2021,
+  # cond_2019, cond_2021,
+  fyc_2019, fyc_2021,
+  rx_2019, rx_2021,
+  rx_2019_ndc, rx_2021_ndc,
+  link_2019, link_2021
+)
+
+# ---- FINAL CLEAN ----
+# add year variable to fyc_adhd_merged_2019 and fyc_adhd_merged_2021 
+# to distinguish in combined dataset
+fyc_adhd_merged_2019 <- fyc_adhd_merged_2019 %>% mutate(year = 2019)
+fyc_adhd_merged_2021 <- fyc_adhd_merged_2021 %>% mutate(year = 2021)
+
+# from cond files, identify people with ADHD diagnosis
+adhd_cond_2019 <- cond_2019 %>% 
+  filter(str_starts(ICD10CDX, "F90")) %>% 
+  select(DUPERSID) %>% 
+  distinct() %>% 
+  mutate(adhd_cond_flag = 1)
+adhd_cond_2021 <- cond_2021 %>% 
+  filter(str_starts(ICD10CDX, "F90")) %>% 
+  select(DUPERSID) %>% 
+  distinct() %>% 
+  mutate(adhd_cond_flag = 1)
+
+# merge onto fyc_adhd_merged_2019 and fyc_adhd_merged_2021
+fyc_adhd_merged_2019 <- fyc_adhd_merged_2019 %>% 
+  left_join(adhd_cond_2019, by = "DUPERSID") %>% 
+  replace_na(list(adhd_cond_flag = 0))
+fyc_adhd_merged_2021 <- fyc_adhd_merged_2021 %>% 
+  left_join(adhd_cond_2021, by = "DUPERSID") %>% 
+  replace_na(list(adhd_cond_flag = 0))
+
+# combined
+fyc_clean <- bind_rows(fyc_adhd_merged_2019, fyc_adhd_merged_2021) %>%
+  mutate(
+    year = factor(year, levels = c(2019, 2021)),
+
+    adult_income_2021 = if_else(AGE53X >= 18, income_2021, NA_real_),
+
+    insurance_table1 = if_else(
+      str_detect(insurance, "Medicare"),
+      NA_character_,
+      insurance
+    ),
+    insurance_table1 = factor(insurance_table1),
+
+    age_group = case_when(
+      AGE53X < 18 ~ "Child (<18 years)",
+      AGE53X >= 18 ~ "Adult (18+ years)",
+      TRUE ~ NA_character_
+    ),
+    age_group = factor(age_group, levels = c("Child (<18 years)", "Adult (18+ years)")),
+    
+    age_sex_group = case_when(
+      AGE53X < 18 & sex == "Male" ~ "Child, male",
+      AGE53X < 18 & sex == "Female" ~ "Child, female",
+      AGE53X >= 18 & sex == "Male" ~ "Adult, male",
+      AGE53X >= 18 & sex == "Female" ~ "Adult, female",
+      TRUE ~ NA_character_
+    ),
+    age_sex_group = factor(
+      age_sex_group,
+      levels = c("Child, male", "Child, female", "Adult, male", "Adult, female")
+    )
+  )
+
+# save cleaned dataset
+write.csv(fyc_clean,
+          "cleaned_fyc_adhd_data.csv",
+          row.names = FALSE)
 
 ```
 
@@ -71,6 +750,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r import cleaned dataset}
 
+fyc_clean <- read.csv("cleaned_fyc_adhd_data.csv") 
+
 ```
 
 
@@ -78,61 +759,194 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Abstract
 
-Write your abstract here using the following four sections. The abstract should not be more than 250 words: <!-- Delete this text when you start writing your abstract -->
+ **Background**: Attention-deficit hyperactivity disorder (ADHD) affects approximately 11% of U.S. children and 6% of U.S. adults and is associated with substantial healthcare and economic burden. The COVID-19 pandemic introduced major shifts in care delivery, including expanded telehealth prescribing, yet population-level data on whether these changes affected ADHD medication utilization patterns are limited.
+  <!-- Replace this text with your Background text -->
+ 
+ 
+ **Methods**: We conducted a retrospective cross-sectional analysis using nationally representative Medical Expenditure Panel Survey (MEPS) data from 2019 and 2021. The study sample included non-Medicare beneficiaries aged less than 65 years with a documented ADHD diagnosis (unweighted N = 962; weighted N = 14,534,825). The primary outcome was annual ADHD-related prescription fills per person-year. Survey-weighted quasi-Poisson and log-linked gamma regression models were used to estimate differences in medication utilization and spending, adjusting for prespecified sociodemographic covariates including age, sex, race, insurance type, and income.
 
- **Background**: Problem being addressed in the study  <!-- Replace this text with your Background text -->
- 
- 
- **Methods**: How the study was conducted <!-- Replace this text with your Methods text -->
- 
- 
- **Results**: Salient results  <!-- Replace this text with your Results text -->
- 
- 
- **Conclusion**: Contextualize findings/conclusions from study results  <!-- Replace this text with your Conclusion text -->
- 
- 
-*Note:* The Background, Methods, and Conclusion sections usually have 2-3 sentences only. The Results section can have more than that. Focus on interesting/important findings in the Results section here, *not* all results. See [this article from NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2515458) for an example. <!-- Delete this text when you start writing your abstract -->
 
+ <!-- Replace this text with your Methods text -->
+ 
+ 
+**Results**: NEEDS TO BE ADDED !!!!!
+ 
+ 
+ **Conclusion**: ADHD medication utilization among U.S. adults remained stable following COVID-19 telehealth expansion, suggesting that policy-driven increases in access to care preserved continuity of treatment rather than increasing overall utilization. Persistent racial disparities highlight the need for equity-focused strategies to ensure that telehealth expansion translates into more equitable ADHD care.
+ 
 
 # Introduction
+Attention-deficit hyperactivity disorder (ADHD) affects an estimated 11% of children and 6% of adults in the United States and is associated with substantial clinical and economic burden, including increased healthcare utilization, pharmaceutical expenditures, and reduced productivity<sup>1,2</sup>. Over the past decade, improved diagnostic awareness and evolving clinical practices have contributed to rising prevalence estimates<sup>3</sup>; however, national trends in treatment patterns and their downstream economic implications remain incompletely characterized.
 
-- Provide a brief paragraph on background for your research question; what is known, what is not known, why is this research area important; what is the population of interest; who will benefit from this research?
+The COVID-19 pandemic introduced a major structural shift in healthcare delivery, including the rapid expansion of telehealth and the temporary relaxation of prescribing regulations for controlled substances.<sup>4</sup> These policy changes may have reduced barriers to ADHD diagnosis and treatment by enabling remote evaluation and prescribing.<sup>5</sup> At the same time, broader pandemic-related disruptions—including shifts in healthcare-seeking behavior, mental health demand, and medication supply variability—may have independently influenced ADHD care patterns, making the net of telehealth expansion on medication utilization difficult to isolate.
 
-- Outline the overall broader research question, and then provide your specific research hypothesis. Include what you expect to see (it may or may not end up being true, but write what you had expected to see at the start of the project). 
+Existing literature on telehealth expansion has largely focused on pediatric populations, private insurance datasets, or general mental health services, leaving a gap in nationally representative analyses that span the age spectrum and capture diverse payer sources. Understanding how ADHD medication utilization changed following COVID-era telehealth expansion is critical for informing prescribing policy, improving access to care, and identifying persistent disparities across sociodemographic groups.<sup>6,7</sup>
 
-- In the final version, this should be a well written introduction in prose form, with multiple paragraphs. During the draft phase, you can start out by using bullet points to list all the ideas you want to discuss.
+Using nationally representative data from the Medical Expenditure Panel Survey (MEPS), we evaluated changes in ADHD medication utilization and spending among U.S. individuals aged less than 65 years before (2019) and after (2021) COVID-era telehealth expansion. We hypothesized that medication utilization increased in the post-COVID period and that changes varied by sociodemographic and access-related factors.
 
 
 
 # Methods
 
-- Describe your study and the dataset (e.g. if you are working with NHANES, briefly describe the data collection process, sample size, year the data were collected, etc. If you are working with data collected by your preceptor, get this information from them - how were subjects recruited, how many were targeted, how were the data collected, etc). 
+Study design and data source. We conducted a retrospective, cross-sectional analysis using data from the Medical Expenditure Panel Survey (MEPS). MEPS is a nationally representative survey of the U.S. civilian noninstitutionalized population that collects detailed information on healthcare utilization, expenditures, prescription medications, and sociodemographic characteristics through repeated household interviews and medical provider verification. Four MEPS component files were used: the Household Component Full-Year Consolidated data (FYC), the Household Component Medical Conditions data (COND), the Household Component Event Prescribed Medications data (RX), and the Condition-Event Link file (CLNK). The variables extracted from FYC are in Supplemental Table 1; all variables were extracted from COND, RX, and CLNK files.
 
-- Describe the inclusion/exclusion criteria, as well as the numbers before and after. Include a data cleaning flowchart as an image (see Figure 1 below for an example).
+Inclusion and exclusion criteria. The study sample included individuals aged less than 65 years who were not Medicare beneficiaries and had a documented diagnosis of ADHD, identified using International Classification of Diseases, 10th Revision, Clinical Modification (ICD-10-CM) code F90. Medicare beneficiaries were excluded due to insufficient sample size to support reliable survey-weighted estimates in this subgroup. Stimulant and non-stimulant medications approved by the U.S. Food and Drug Administration (FDA) for the treatment of ADHD were identified using National Drug Codes (NDCs; see Supplemental File 1). The CLNK file was used to link prescribed medications in the RX file to an ADHD diagnosis in the COND file, ensuring that only medications prescribed for the indication of ADHD were included. The sample selection process is summarized in Figure 1.
 
-<!-- The following code gives the default way of including an image into your RMD file, along with a caption. But it does not allow a lot of customization. -->
+```{r}
+# ---- SELECTION ----
+# 1. Was less than 65 in **BOTH** 2019 and 2021
+# 2. No Medicare in **EITHER** 2019 and 2021
+# 3. ADHD diagnosis in **BOTH** 2019 and 2021
+# 4. ADHD and RX linkage in **EITHER** 2019 and 2021
 
-![**Figure 1:** Flowchart showing the inclusion/exclusion criteria, and the numbers removed at each step.](data_cleaning_flowchart.png)
+# select based on criteria above
+selection_counts <- list()
 
-- Describe the broader concepts for exposure and outcome variables, and how they are actually measured/represented in your study. Cite evidence or theoretical backing for why this particular measure is a valid construct for the concept you are trying to capture, and exactly what dimension of your concept it actually captures. For example, your research question might be "Too much screen time is bad for cardiovascular health"; "screen time" and "cardiovascular health" are broad concepts. In your study, how exactly do you define/measure these concepts? Perhaps you define screen time as *number of minutes on the phone per day while not performing a work related task* and cardiovascular health as *average systolic blood pressure based on measuring it on five consecutive days*. Discuss what aspect of "screen time" and "cardiovascular health" these specific measures of these concepts actually capture; what are the pros and cons/strengths and weaknesses of these particular measures.
+selection_people <- fyc_clean %>% 
+  group_by(DUPERSID) %>% 
+  summarize(
+    # n_years = n_distinct(year),
+    age_ok = all(AGE53X <= 65, na.rm = TRUE),
+    no_medicare = all(medicare == "No Medicare", na.rm = TRUE),
+    adhd_dx = all(adhd_cond_flag == 1, na.rm = TRUE),
+    any_adhd_pmed = all(adhd_pmed_flag == 1, na.rm = TRUE),
+    .groups = "drop"
+  )
 
-- Discuss what additional variables you plan to include in your analysis, and what role these variables will play. Include your DAG here. See Figure 2 below for an example. 
+selection_counts$total <- nrow(fyc_clean)
 
-<!-- The following code gives an alternative way to imbed images into your RMD that allows a lot more customization, e.g. centering the image/caption, changing the image size, etc. 
+# # Find DUPERSIDs that appear in both 2019 and 2021 - don't do this
+# selection_counts$step1 <- selection_people %>% 
+#   filter(n_years == 2) %>% 
+#   nrow()
 
-NOTE: for this code to run, you must install the package "here" (install.packages("here")) -->
+# Among those in both years,
+# select those <= 65 years old
+selection_counts$step2 <- selection_people %>% 
+  filter(age_ok) %>% 
+  nrow()
+
+# Among those in both years and <= 65,
+# select those without Medicare
+selection_counts$step3 <- selection_people %>% 
+  filter(age_ok, no_medicare) %>% 
+  nrow()
+
+# Among those in both years, <= 65,
+# and without Medicare,
+# select those with ADHD diagnosis
+selection_counts$step4 <- selection_people %>% 
+  filter(age_ok, no_medicare, adhd_dx) %>% 
+  nrow()
+
+# Among those in both years, <= 65,
+# without Medicare, and with ADHD diagnosis,
+# select those with ADHD PMED fills
+# (adhd_pmed_flag == 1) in either year
+selection_counts$step5 <- selection_people %>% 
+  filter(age_ok, no_medicare, adhd_dx, any_adhd_pmed) %>% 
+  nrow()
+
+options(survey.lonely.psu = "adjust")
+
+design <- svydesign(
+  id = ~VARPSU,
+  strata = ~VARSTR,
+  weights = ~PERWT,
+  data = fyc_clean,
+  nest = TRUE
+)
+
+# removed n_years == 2 criteria to capture all people with ADHD PMED fills in either year
+ids_step4 <- selection_people %>%
+  filter(age_ok, no_medicare, adhd_dx) %>%
+  pull(DUPERSID)
+
+ids_step5 <- selection_people %>%
+  filter(age_ok, no_medicare, adhd_dx, any_adhd_pmed == 1) %>%
+  pull(DUPERSID)
+
+design_step4 <- subset(design, DUPERSID %in% ids_step4)
+design_step5 <- subset(design, DUPERSID %in% ids_step5)
+
+# ---- FLOWCHART ----
+# Create flowchart data
+flowchart_data <- tibble(
+  step = c("Total Records", "Age less than 65", "No Medicare", "ADHD Diagnosis", "ADHD PMED Fills"),
+  count = c(
+    selection_counts$total,
+    selection_counts$step2,
+    selection_counts$step3,
+    selection_counts$step4,
+    selection_counts$step5
+  ),
+  excluded = c(
+    0,
+    selection_counts$total - selection_counts$step2,
+    selection_counts$step2 - selection_counts$step3,
+    selection_counts$step3 - selection_counts$step4,
+    selection_counts$step4 - selection_counts$step5
+  )
+)
+
+# Visualize with grViz using glue syntax
+flowchart <- grViz(glue("
+  digraph {{
+    graph [rankdir = TB, nodesep = 0.55, ranksep = 0.65]
+    
+    node [shape = box, style = 'rounded,filled', fillcolor = lightblue, fontname = Helvetica, fontsize = 12, width = 4.5]
+    
+    edge [fontname = Helvetica, fontsize = 11]
+    
+    a [label = 'Total records from 2019 and 2021\\nN = {selection_counts$total}']
+    b [label = 'Age-eligible cohort (less than 65 years)\\nN = {selection_counts$step2}']
+    c [label = 'Non-Medicare age-eligible cohort\\nN = {selection_counts$step3}']
+    d [label = 'Included analysis cohort (ADHD Diagnosis)\\nN = {selection_counts$step4}']
+    e [label = 'Among ADHD patients, cohort with linked fills\\nN = {selection_counts$step5}']
+    
+    x1 [label = 'Excluded: Age >65\\nN = {selection_counts$total - selection_counts$step2}', style = 'rounded,dashed', width = 3.8]
+    x2 [label = 'Excluded: Medicare beneficiaries\\nN = {selection_counts$step2 - selection_counts$step3}', style = 'rounded,dashed', width = 3.8]
+    x3 [label = 'Excluded: No ADHD\\nN = {selection_counts$step3 - selection_counts$step4}', style = 'rounded,dashed', width = 3.8]
+
+    a -> b
+    b -> c
+    c -> d
+    d -> e
+    
+    b -> x1 [constraint = false]
+    c -> x2 [constraint = false]
+    d -> x3 [constraint = false]
+    
+    {{ rank = same; b; x1 }}
+    {{ rank = same; c; x2 }}
+    {{ rank = same; d; x3 }}
+  }}
+"))
+
+flowchart
+```
+
+
+Independent Variables. Independent variables were selected based on previous studies of economic outcomes with ADHD and were recorded to ensure adequate stratum sizes. Educational attainment was dichotomized at the level of high school graduation or equivalent. The "poor/negative" and "near-poor" poverty categories were collapsed into a single "very low income" category.
+
+Exposure and outcome. The primary exposure was a binary indicator for the time period: pre-COVID (2019) versus post-COVID (2021). The primary outcome was ADHD medication utilization, defined as the number of ADHD-related prescription fills per person-year. This count-based measure captures treatment intensity and engagement with pharmacologic management.
+
+Covariates. Covariates were selected based on a directed acyclic graph (DAG) informed by prior literature and conceptual relationships (Figure 2). The primary adjustment set included age, sex, race, ethnicity, educational attainment, and socioeconomic status. Access to care and healthcare utilization were conceptualized as mediators of the relationship between COVID-era policy changes and prescription fills and were therefore excluded from the primary adjustment set to avoid overadjustment bias.
+
 
 ```{r DAG, fig.align = 'center', out.width = "40%", fig.cap = "**Figure 2:** My DAG"}
-knitr::include_graphics(here::here("DAG.png"))
+#knitr::include_graphics(here::here("DAG.png"))
+#insert dag
+
 ```
 
 
 
-- Describe what statistical analysis you will conduct, and what approach you will take for building the model, what diagnostic tests you will conduct, and how you intend to address any violations of model assumptions. Also discuss any sensitivity analyses that you will conduct, if appropriate. 
+Statistical analysis. Summary statistics are presented as means with standard deviations for continuous variables and counts with proportions for categorical variables. Differences between the pre- and post-COVID periods were assessed using Rao-Scott adjusted Pearson chi-squared tests for categorical variables and design-based Kruskal-Wallis tests for continuous variables.
 
+Because the primary outcome is a count variable with expected overdispersion, survey-weighted quasi-Poisson regression was used to estimate the association between COVID period and ADHD prescription fills. A series of nested models with sequential covariate adjustment were constructed, and results are reported as incidence rate ratios (IRRs) with 95% confidence intervals. Model diagnostics included assessment of overdispersion and goodness of fit. Sensitivity analyses evaluated alternative model specifications and adjustment sets.
 
-- You can choose to create sub-sections as needed to better organize this section (but it is not required).
+All analyses incorporated MEPS survey design elements, including person-level weights (PERWTXXF; XX = 19 or 21), variance strata (VARSTR), and primary sampling units (VARPSU), to produce nationally representative estimates and appropriately account for the complex survey design. Statistical significance was defined as a two-sided p-value 0.05. All analyses were performed using R Statistical Software (version 4.5.3; R Core Team, 2021).
 
 
 # Supplementary Material {.tabset}
@@ -141,6 +955,9 @@ This section includes all your analysis. We will look at this section while read
 
 ## Initial Exploratory Data Analysis {.tabset}
 
+Initial exploratory data analysis (EDA) was performed to characterize the analytic cohort, assess variable distributions, identify missingness and potential outliers, and evaluate assumptions relevant to subsequent regression modeling. Particular attention was given to the distribution of the primary outcome variable (ADHD medication fills), as well as the balance of sociodemographic characteristics across study years.
+
+Survey-weighted descriptive analyses were conducted using MEPS person-level weights to ensure nationally representative estimates. Continuous variables were summarized using means, standard deviations, medians, and graphical inspection of distributions, while categorical variables were summarized using weighted counts and proportions. Exploratory analyses also informed model selection and covariate specification for multivariable regression.
 
 ### Univariate Analysis {.tabset}
 
@@ -148,90 +965,658 @@ Include your Univariate Analysis here. *After each analysis, include 1-2 sentenc
 
 #### Outcome
 
-```{r}
-hist(rnorm(5000))
+```{r, warning=FALSE, message=FALSE}
+# Distribution of ADHD medication fills
 
-summary(rnorm(5000))
+svyhist(
+  ~adhd_fills,
+  design_step5,
+  main = "Distribution of ADHD Medication Fills",
+  xlab = "Number of ADHD Medication Fills",
+  col = "lightblue"
+)
+
+svymean(~adhd_fills, design_step5, na.rm = TRUE)
+
+summary(design_step5$variables$adhd_fills)
 ```
 
-The distribution looks...
-
+The distribution of ADHD medication fills was right-skewed, with most participants having relatively few annual prescription fills and a smaller subset demonstrating substantially higher utilization. Evidence of overdispersion was observed, supporting the use of survey-weighted quasi-Poisson regression models for subsequent analyses.
 
 #### Primary Exposure 
 
-```{r}
-hist(rnorm(5000))
+```{r, warning=FALSE, message=FALSE}
+# Distribution of study year
 
-summary(rnorm(5000))
+svytable(~year, design_step4)
+
+prop.table(svytable(~year, design_step4))
+
+barplot(
+  svytable(~year, design_step4),
+  main = "Distribution of Study Year",
+  ylab = "Weighted Count",
+  col = "lightblue"
+)
 ```
 
-The distribution looks...
+The weighted analytic sample was approximately evenly distributed between 2019 and 2021. This balance supports comparison between the pre- and post-COVID periods without substantial imbalance in sample representation across years.
+
 
 #### Potential Confounders and other Covariates
 
-```{r}
-table(c(rep(1, 50), rep(0, 30)))
-barplot(table(c(rep(1, 500), rep(0, 100))))
+```{r, warning=FALSE, message=FALSE}
+# Age distribution
+
+svyhist(
+  ~AGE53X,
+  design_step4,
+  main = "Distribution of Age",
+  xlab = "Age (years)",
+  col = "lightblue"
+)
+
+svymean(~AGE53X, design_step4, na.rm = TRUE)
+
+summary(design_step4$variables$AGE53X)
 ```
 
-The distribution looks...
+Age was broadly distributed across the lifespan among participants aged less than 65 years. The sample included both pediatric and adult participants, with a modest shift toward older individuals observed in 2021.
 
-```{r}
-hist(rnorm(5000))
 
-summary(rnorm(5000))
+```{r, warning=FALSE, message=FALSE}
+# Sex distribution
+
+sex_table <- svytable(~sex, design_step4)
+
+sex_table
+
+prop.table(sex_table)
+
+barplot(
+  sex_table,
+  main = "Distribution of Sex",
+  ylab = "Weighted Count",
+  col = "lightblue"
+)
 ```
 
-This distribution looks...
+The sample was relatively balanced by sex, although males represented a slightly larger proportion of the cohort. This pattern is consistent with the known epidemiology of ADHD diagnoses.
+
+```{r, warning=FALSE, message=FALSE}
+# Race distribution
+
+race_table <- svytable(~race, design_step4)
+
+race_table
+
+prop.table(race_table)
+
+barplot(
+  race_table,
+  main = "Distribution of Race",
+  ylab = "Weighted Count",
+  col = "lightblue"
+)
+```
+White participants comprised the majority of the weighted cohort, while Black, Asian, and Other racial groups represented smaller proportions of the sample. The racial distribution remained relatively stable between study years.
+
+```{r, warning=FALSE, message=FALSE}
+# Insurance distribution
+
+insurance_table <- svytable(~insurance_table1, design_step4)
+
+insurance_table
+
+prop.table(insurance_table)
+
+barplot(
+  insurance_table,
+  main = "Distribution of Insurance Type",
+  ylab = "Weighted Count",
+  col = "lightblue",
+  las = 2
+)
+```
+Most participants had some form of health insurance coverage, with private insurance representing the largest category in both years. Only a small proportion of participants were uninsured.
+
+```{r, warning=FALSE, message=FALSE}
+# Poverty category distribution
+
+pov_table <- svytable(~povcat, design_step4)
+
+pov_table
+
+prop.table(pov_table)
+
+barplot(
+  pov_table,
+  main = "Distribution of Poverty Category",
+  ylab = "Weighted Count",
+  col = "lightblue",
+  las = 2
+)
+```
+
+Participants were represented across all income strata, though the largest proportion fell within the high-income category. Very low-income and low-income groups together comprised a substantial minority of the analytic cohort.
+
+
+Overall, the univariate analyses demonstrated that the analytic cohort was demographically diverse and broadly balanced across study years. The primary outcome variable, ADHD medication fills, exhibited substantial right skew and overdispersion, supporting the use of quasi-Poisson regression models for inferential analyses.
 
 
 ### Bivariate Analysis {.tabset}
 
-Include your Bivariate Analyses here. *After each analysis, include 1-2 sentences describing the relationship you observe.*
-
-
 #### Outcome vs. Exposure 
 
 
+```{r, warning=FALSE, message=FALSE}
+# ADHD medication fills by study year
+
+svyby(
+  ~adhd_fills,
+  ~year,
+  design_step5,
+  svymean,
+  na.rm = TRUE
+)
+
+boxplot(
+  adhd_fills ~ year,
+  data = design_step5$variables,
+  main = "ADHD Medication Fills by Study Year",
+  xlab = "Study Year",
+  ylab = "ADHD Medication Fills",
+  col = "lightblue"
+)
+
+svyranktest(adhd_fills ~ year, design = design_step5)
+```
+
+Average ADHD medication fill rates were similar between 2019 and 2021. Visual inspection and survey-weighted rank testing did not demonstrate a statistically significant difference in prescription utilization between the pre- and post-COVID periods.
+
 #### Outcome vs. Potential Confounders
 
+```{r, warning=FALSE, message=FALSE}
+# ADHD fills by race
+
+svyby(
+  ~adhd_fills,
+  ~race,
+  design_step5,
+  svymean,
+  na.rm = TRUE
+)
+
+boxplot(
+  adhd_fills ~ race,
+  data = design_step5$variables,
+  main = "ADHD Medication Fills by Race",
+  xlab = "Race",
+  ylab = "ADHD Medication Fills",
+  col = "lightblue"
+)
+
+svyranktest(adhd_fills ~ race, design = design_step5)
+```
+Differences in ADHD medication utilization were observed across racial groups. White participants demonstrated higher average fill rates compared with Black participants and individuals categorized as Other race.
 
 #### Associations between Potential Confounders
 
+```{r, warning=FALSE, message=FALSE}
+# ADHD fills by sex
+
+svyby(
+  ~adhd_fills,
+  ~sex,
+  design_step5,
+  svymean,
+  na.rm = TRUE
+)
+
+boxplot(
+  adhd_fills ~ sex,
+  data = design_step5$variables,
+  main = "ADHD Medication Fills by Sex",
+  xlab = "Sex",
+  ylab = "ADHD Medication Fills",
+  col = "lightblue"
+)
+
+svyranktest(adhd_fills ~ sex, design = design_step5)
+```
+
+ADHD medication utilization appeared relatively similar between male and female participants. No major unadjusted differences in fill rates by sex were observed.
+
+```{r, warning=FALSE, message=FALSE}
+svyby(
+  ~adhd_fills,
+  ~insurance_table1,
+  design_step5,
+  svymean,
+  na.rm = TRUE
+)
+
+boxplot(
+  adhd_fills ~ insurance_table1,
+  data = design_step5$variables,
+  main = "ADHD Medication Fills by Insurance Type",
+  xlab = "Insurance Type",
+  ylab = "ADHD Medication Fills",
+  col = "lightblue",
+  las = 2
+)
+
+svyranktest(adhd_fills ~ insurance_table1, design = design_step5)
+```
+
+Variation in ADHD medication utilization was observed across insurance categories, though interpretation was limited by smaller subgroup sizes in some insurance groups. Participants with private insurance generally demonstrated higher utilization compared with uninsured individuals.
+
+```{r, warning=FALSE, message=FALSE}
+race_insurance <- svytable(~race + insurance_table1, design_step4)
+
+race_insurance
+
+prop.table(race_insurance, margin = 1)
+
+```
+
+Insurance coverage patterns differed across racial groups. White participants were more likely to have private insurance, whereas Medicaid coverage represented a larger proportion of insurance status among Black participants and individuals categorized as Other race.
+
+```{r, warning=FALSE, message=FALSE}
+# Age group by year
+
+age_year <- svytable(~age_group + year, design_step4)
+
+age_year
+
+prop.table(age_year, margin = 2)
+
+barplot(
+  age_year,
+  beside = TRUE,
+  legend = TRUE,
+  main = "Age Group Distribution by Study Year",
+  col = c("lightblue", "lightgreen")
+)
+```
+
+The proportion of adults increased in 2021 relative to 2019, while the proportion of children decreased modestly. This shift suggests a somewhat older ADHD population in the post-COVID sample.
+
+```{r, warning=FALSE, message=FALSE}
+# Poverty category vs insurance
+
+pov_insurance <- svytable(~povcat + insurance_table1, design_step4)
+
+pov_insurance
+
+prop.table(pov_insurance, margin = 1)
+```
+
+Insurance type varied substantially across poverty categories. Medicaid coverage was more common among lower-income participants, whereas private insurance predominated among middle- and high-income groups.
 
 ### Summary {.active}
 
-Summarize the findings from the univariate and bivariate analyses here. 
+Exploratory analyses demonstrated that the analytic cohort was broadly balanced across study years and included a diverse range of ages, insurance types, and socioeconomic backgrounds. The primary outcome variable, ADHD medication fills, demonstrated substantial right skew and overdispersion, supporting the use of survey-weighted quasi-Poisson regression models for subsequent analyses.
 
+Bivariate analyses suggested that ADHD medication utilization remained relatively stable between 2019 and 2021, with no major unadjusted differences observed across study years. In contrast, several sociodemographic characteristics appeared to be associated with utilization patterns. In particular, racial differences in medication fills were observed, with White participants generally demonstrating higher utilization than Black participants and individuals categorized as Other race. Insurance coverage and poverty category were also associated with variation in utilization patterns and demonstrated important relationships with one another, supporting their inclusion as covariates in multivariable modeling.
+
+Taken together, these findings supported the planned multivariable regression approach and informed selection of adjustment variables for the final survey-weighted models.
 
 ## Model Building {.tabset}
 
 ### Regression Model
+A series of nested survey-weighted quasi-Poisson regression models were constructed to evaluate the association between study year and ADHD medication fills while sequentially adjusting for potential confounders identified a priori through the directed acyclic graph.
 
+Model 1 included only the primary exposure (study year). Subsequent models sequentially adjusted for age, sex, race, educational attainment, insurance status, and poverty category. Ethnicity was evaluated separately due to collinearity with race variables and was therefore excluded from the final model.
+
+The final adjusted model included:
+- study year
+- age
+- sex
+- race
+- educational attainment
+- insurance status
+- poverty category
+
+```{r, warning=FALSE, message=FALSE}
+# Final adjusted model
+
+model8 <- svyglm(
+  adhd_fills ~ year + AGE53X + sex + race + education + has_insurance + POVCAT,
+  design = design_step4,
+  family = quasipoisson()
+)
+
+summary(model8)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Create IRR table
+
+coef_table <- coef(summary(model8))
+
+results <- data.frame(
+  term = rownames(coef_table),
+  IRR = exp(coef(model8)),
+  CI_low = exp(confint.default(model8)[,1]),
+  CI_high = exp(confint.default(model8)[,2]),
+  p_value = 2 * pt(
+    abs(coef_table[, "t value"]),
+    df = degf(design_step4),
+    lower.tail = FALSE
+  )
+)
+
+results
+```
+
+The fully adjusted model demonstrated minimal change in ADHD medication fill rates between 2019 and 2021 after adjustment for sociodemographic characteristics. Several covariates, particularly race and insurance status, demonstrated stronger associations with utilization patterns than study year itself.
 
 ### Model Diagnostics
+Exploratory analyses demonstrated substantial right skew and overdispersion in the ADHD medication fills outcome variable, supporting the use of quasi-Poisson regression rather than standard Poisson regression.
 
+```{r, warning=FALSE, message=FALSE}
+mean(design_step4$variables$adhd_fills, na.rm = TRUE)
+
+var(design_step4$variables$adhd_fills, na.rm = TRUE)
+```
+
+The variance exceeded the mean, consistent with overdispersion.
+
+```{r}
+par(mfrow = c(2,2))
+plot(model8)
+```
+
+Visual inspection of residual and fitted value plots did not identify major deviations from model assumptions or influential outliers substantially affecting model fit.
 
 ### Sensitivity Analysis
 
+A sensitivity analysis was performed restricting the analytic sample to participants with at least one linked ADHD medication fill (`design_step5`).
+
+```{r, warning=FALSE, message=FALSE}
+model9 <- svyglm(
+  adhd_fills ~ year + AGE53X + sex + race,
+  design = design_step5,
+  family = quasipoisson()
+)
+
+summary(model9)
+```
+
+```{r, warning=FALSE, message=FALSE}
+coef_table2 <- coef(summary(model9))
+
+results2 <- data.frame(
+  term = rownames(coef_table2),
+  IRR = exp(coef(model9)),
+  CI_low = exp(confint.default(model9)[,1]),
+  CI_high = exp(confint.default(model9)[,2]),
+  p_value = 2 * pt(
+    abs(coef_table2[, "t value"]),
+    df = degf(design_step5),
+    lower.tail = FALSE
+  )
+)
+
+results2
+```
+
+Results were directionally similar to the primary analysis, suggesting that findings were robust to restricting the cohort to participants with documented ADHD medication utilization.
 
 # Results
 
-Describe your findings. 
+## Sample population characteristics
+The analytic sample comprised nationally representative cross-sectional samples of U.S. individuals aged less than 65 years with ADHD in 2019  (weighted N = 7,136,410) and 2021 (weighted N = 7,398,415) (Table 1). Sociodemographic characteristics were broadly similar between the two periods, with observed differences primarily reflecting shifts in age distribution.
 
-Reproduce any tables or plots that you already created in the Supplementary Material section that you definitely want the reader to see. 
+Median age increased from 23 years (SD = 15) in 2019 to 25 years (SD = 15) in 2021 (p = 0.005), and the distribution of age groups differed between years (p = 0.008): the proportion of children (<18 years) decreased from 50% to 41%, with a corresponding increase from 50% to 59% among adults. The distribution of age-sex subgroups also differed significantly (p = 0.015), driven primarily by a relative increase in adult male representation.
 
-Make sure to include Table 1 here. If your primary exposure is continuous, then instead of the Table 1 that we discussed, include a table that provides the univariate summary of each variable (both continuous and categorical variables).
+Racial and ethnic composition was stable across years. The distribution of race did not differ significantly (p = 0.70), nor did ethnicity (Hispanic vs. non-Hispanic; p = 0.70). Educational attainment was similar, with approximately 70–73% of participants having a college education or greater (p = 0.50). Nearly all individuals were insured in both years (98–99%; p = 0.8), with no significant difference in insurance type (p > 0.9); private insurance was the most common category in both periods. Household income distribution, as measured by poverty category, was also comparable (p = 0.80), with the largest proportion of individuals in the high-income category in both samples.
+
+
+```{r, warning=FALSE, message=FALSE}
+table1 <- tbl_svysummary(
+    design_step4,
+    by = year,
+    include = c(
+      AGE53X,
+      age_group,
+      age_sex_group,
+      race,
+      ethnicity,
+      education,
+      has_insurance,
+      insurance_table1,
+      povcat
+    ),
+    label = list(
+      AGE53X ~ "Age (years)",
+      age_group ~ "Age group",
+      age_sex_group ~ "Age-sex subgroup",
+      race ~ "Race",
+      ethnicity ~ "Ethnicity",
+      education ~ "Education",
+      has_insurance ~ "Has insurance",
+      insurance_table1 ~ "Type of insurance",
+      povcat ~ "Poverty category"
+    ),
+    statistic = list(
+      all_categorical() ~ "{n} ({p}%)",
+      all_continuous() ~ "{mean} ({sd})"
+    ),
+    missing = "no"
+  ) %>%
+  add_p() %>%
+  bold_labels()
+
+table1
+```
+
+
+## ADHD medication utilization
+Among individuals with at least one prescription fill, ADHD medication utilization was similar between 2019 and 2021 (Table 2). The median number of fills per person-year was 5 (IQR 4) in 2019 and 6 (IQR 5) in 2021 (p > 0.90). Days supplied (161 vs. 164 days; p = 0.80) and average pills per fill (45 vs. 44; p = 0.60) were also stable across years.
+
+The proportion of individuals using two unique ADHD medications increased numerically from 2.2% in 2019 to 5.8% in 2021, though this did not reach statistical significance (p = 0.08).
+
+Total ADHD medication spending, out-of-pocket spending, and the out-of-pocket share were similar between years (total spending, p = 0.08; out-of-pocket spending, p = 0.40; out-of-pocket share, p = 0.20). Private insurance spending decreased numerically while Medicaid spending increased, but neither difference was statistically significant (private insurance, p = 0.06; Medicaid, p = 0.20).
+
+```{r, warning=FALSE, message=FALSE}
+# ---- TABLE 2 ----
+# Create a table of ADHD related metrics
+table2 <- tbl_svysummary(
+  design_step5,
+  by = year,
+  include = c(
+    n_drug_names,
+    adhd_fills,
+    adhd_days_supp,
+    pill_qty_mean,
+    adhd_total_spend,
+    adhd_oop,
+    adhd_private,
+    adhd_medicaid,
+    oop_share
+  ),
+  label = list(
+    n_drug_names ~ "Number of unique ADHD drugs used",
+    adhd_fills ~ "Number of ADHD medication fills",
+    adhd_days_supp ~ "Number of ADHD medication days supplied",
+    pill_qty_mean ~ "Average number of pills per fill",
+    adhd_total_spend ~ "Total ADHD medication spending (2021 USD)",
+    adhd_oop ~ "Out-of-pocket ADHD spending (2021 USD)",
+    adhd_private ~ "Private insurance ADHD spending (2021 USD)",
+    adhd_medicaid ~ "Medicaid ADHD spending (2021 USD)",
+    oop_share ~ "Out-of-pocket share of ADHD medication spending (%)"
+  ),
+  statistic = list(
+    all_categorical() ~ "{n} ({p}%)",
+    all_continuous() ~ "{mean} ({sd})"
+    # adhd_fills ~ "{mean} ({sd})",
+    # adhd_days_supp ~ "{mean} ({sd})",
+    # pill_qty_mean ~ "{mean} ({sd})",
+    # adhd_total_spend ~ "{median} ({p25}-{p75})",
+    # adhd_oop ~ "{median} ({p25}-{p75})",
+    # adhd_private ~ "{median} ({p25}-{p75})",
+    # adhd_medicaid ~ "{median} ({p25}-{p75})",
+    # oop_share ~ "{mean} ({sd})"
+  ),
+  missing = "no"
+) %>% 
+  add_p() %>%
+  bold_labels() %>% 
+  modify_table_styling(
+    columns = label,
+    footnote = "Participants who were on different formulations of the same 
+    drug (e.g., normal and extended-release) are characterized as using 2 
+    unique ADHD drugs.")
+
+table2
+```
+
+
+## Medication type and treatment patterns
+The distribution of ADHD medication classes did not differ significantly between 2019 and 2021 (p = 0.10), though directional shifts were observed (Table 3). Amphetamines remained the most commonly prescribed class, accounting for 55% of prescriptions in 2019 and 58% in 2021. Dexmethylphenidate use increased (16% to 18%), while methylphenidate use decreased (21% to 19%). Mixed therapy use increased from 0.3% to 2.6%, whereas non-stimulant use decreased from 8.2% to 2.0%.
+
+```{r, message=FALSE, warning=FALSE}
+# ---- TABLE 3 ----
+# Goal: Create Table 3 with types of ADHD meds used 
+# among ADHD cohort, comparing 2019 vs 2021
+# includes people with fills only
+
+# use design variable design_step5
+# variable name drug_names is the names of drugs used
+# delimited by semicolon
+# count the number of each drug or combination of drugs used
+
+# rename from all caps to title case
+design_step5 <- design_step5 %>%
+  update(
+    drug_names = str_to_title(drug_names)
+  ) %>% 
+  # recode drug names to more user-friendly labels
+  update(
+    drug_names = case_when(
+      str_detect(drug_names, "Amphetamine-Dextroamphetamine") 
+        ~ "Amphetamines",
+      str_detect(drug_names, "Amphetamine-Dextroamphetamine; Clonidine") 
+        ~ "Mixed therapy",
+      str_detect(drug_names, "Amphetamine-Dextroamphetamine; Methylphenidate") 
+        ~ "Mixed therapy",
+      str_detect(drug_names, "Clonidine; Dexmethylphenidate") 
+        ~ "Mixed therapy",
+      str_detect(drug_names, "Clonidine; Methylphenidate") 
+        ~ "Mixed therapy",
+      str_detect(drug_names, "Dexmethylphenidate; Guanfacine") 
+        ~ "Mixed therapy",
+      str_detect(drug_names, "Atomoxetine; Methylphenidate") 
+        ~ "Mixed therapy",
+      str_detect(drug_names, "Guanfacine; Methylphenidate") 
+        ~ "Mixed therapy",
+      str_detect(drug_names, "Mixed Therapy") 
+      ~ "Mixed therapy",
+      str_detect(drug_names, "Non-Stimulants") 
+        ~ "Non-stimulants",
+      str_detect(drug_names, "Atomoxetine") ~ "Non-stimulants",
+      str_detect(drug_names, "Bupropion") ~ "Non-stimulants",
+      str_detect(drug_names, "Clonidine") ~ "Non-stimulants",
+      str_detect(drug_names, "Guanfacine") ~ "Non-stimulants",
+      # str_detect(drug_names, "Bupropion") ~ NA_character_,
+      TRUE ~ drug_names
+    )
+  )
+
+table3 <- tbl_svysummary(
+  design_step5,
+  by = year,
+  include = drug_names,
+  label = list(drug_names ~ "ADHD medication types"),
+  statistic = all_continuous() ~ "{n} ({p}%)",
+  missing = "no"
+) %>% 
+  add_p() %>%
+  bold_labels() %>% 
+  modify_table_styling(
+    columns = label,
+    footnote = "Participants who were on different formulations of the same 
+    drug (e.g., normal and extended-release) were included in the same category
+    and not under \"Mixed therapy.\""
+  )
+
+table3
+```
+
+## Multivariable analysis
+
+!!! DO THIS ONCE NITYA FINISHED!
+
+
+### Sensitivity analysis
+
+To evaluate whether findings differed among individuals actively receiving pharmacologic treatment, a sensitivity analysis was conducted, restricting the sample to participants with at least one ADHD medication fill (Model 9). 
+
+!!! FINISH !!!
+
+# Discussion
+
+!! FINISH ONCE NUMBERS DONE !!!
+
+# Limitations
+
+This study should be interpreted in the context of several limitations. As an observational analysis of repeated cross-sectional samples, causal relationships between COVID-era policy changes and ADHD medication utilization cannot be established. Differences between 2019 and 2021 reflect population-level variation rather than within-individual changes, and compositional differences between samples may influence observed trends. Although models adjusted for key sociodemographic factors, residual confounding from unmeasured variables—including ADHD severity, telehealth access, and health literacy—remains likely.
+
+The comparison of two cross-sectional time points also precludes assessment of pre-existing secular trends in ADHD medication utilization. Observed patterns may therefore reflect underlying temporal changes rather than effects attributable to the COVID-19 period specifically. Longitudinal analyses spanning multiple time points would be needed to disentangle pandemic-related shifts from broader trends in prescribing.
+
+The primary outcome—prescription fills—does not capture medication adherence or clinical appropriateness and may be influenced by access, patient preference, and prescribing practices. Although MEPS incorporates pharmacy verification alongside self-report, medications obtained outside traditional pharmacy channels may be undercaptured, potentially underestimating true utilization. Additionally, restriction of certain analyses to individuals with at least one fill may introduce selection bias by conditioning on treatment receipt, limiting generalizability to the broader ADHD population.
+
+Finally, the study was unable to isolate the effects of telehealth expansion from concurrent pandemic-related disruptions, including changes in healthcare-seeking behavior, increased mental health burden, and shifts in care delivery. The sample was further limited to non-institutionalized individuals aged less than 65 years with a documented ADHD diagnosis, excluding both institutionalized populations and individuals with undiagnosed or untreated ADHD. Findings may therefore not generalize to all individuals with the condition or fully capture unmet treatment need.
 
 
 # Conclusion
 
-Write an overall conclusion: 
+ADHD medication utilization among U.S. individuals remained stable between 2019 and 2021 despite widespread disruptions to in-person care during the COVID-19 pandemic. This finding did not support the hypothesis that utilization would increase following telehealth expansion; rather, the stability observed suggests that telehealth-enabled prescribing preserved continuity of existing pharmacologic treatment without substantially expanding overall utilization. 
 
-provide context for your findings;
+The hypothesis that changes would vary by sociodemographic factors was partially supported. Although year of observation was not independently associated with prescription fill rates, disparities persisted: race remained the strongest predictor of medication utilization, and evidence suggested widening gaps by insurance status over time. Together, these findings indicate that while telehealth expansion may support continuity of care, it is insufficient to address the structural barriers underlying inequitable ADHD diagnosis and treatment.
 
-how they compare to your hypotheses;
+These findings indicate that while telehealth expansion may support continuity of care for individuals already receiving treatment, it is insufficient on its own to address the structural barriers that drive inequitable ADHD diagnosis and management. Policy efforts should pair telehealth access with equity-focused strategies—such as community-based ADHD screening programs, improved insurance coverage for behavioral health evaluation, and culturally responsive outreach to historically underserved populations—to ensure that expanded access translates into more equitable care. Future work should extend this analysis longitudinally and examine downstream outcomes, including healthcare expenditures and functional measures such as workplace productivity.
 
-explanations for your results;
+#Declaration of conflicting interests
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
-**Competency:** Propose an improvement in a public health program, policy, or system
+# Funding
+The authors declare that they received no financial support for the research, authorship, and/or publication of this article.
+
+# Author contributions
+B.T.R.: Conceptualization; Formal analysis (equal); Methodology; Project administration; Visualization (equal); Writing – original draft (equal); Writing – review & editing (equal). S.R.: Formal analysis (equal); Methodology; Visualization (equal); Writing – original draft (equal); Writing – review & editing (equal). K.H.: Formal analysis (equal); Visualization (equal); Writing – original draft (equal); Writing – review & editing (equal). N.K.: Formal analysis (equal); Visualization (equal); Writing – original draft (equal); Writing – review & editing (equal). S.S.: Conceptualization; Methodology; Supervision.
+
+
+# Institutional Review Board statement
+The study was approved as not human subject research by the Tufts Health Sciences Institutional Review Board (STUDY00006787).
+
+
+
+# References
+
+1. Staley BS, Robinson LR, Claussen AH, Katz SM, Danielson ML, Summers AD, et al. Attention-deficit/hyperactivity disorder diagnosis, treatment, and telehealth use in adults—National Center for Health Statistics Rapid Surveys System, United States, October-November 2023. MMWR Morb Mortal Wkly Rep. 2024;73(40):890-895. doi:10.15585/mmwr.mm7340a1
+
+2. Schein J, Adler LA, Childress A, Gagnon-Sanschagrin P, Davidson M, Kinkead F, et al. Economic burden of attention-deficit/hyperactivity disorder among adults in the United States: a societal perspective. J Manag Care Spec Pharm. 2022;28(2):168-179. doi:10.18553/jmcp.2021.21290
+
+3. Chung W, Jiang SF, Paksarian D, Nikolaidis A, Castellanos FX, Merikangas KR, et al. Trends in the prevalence and incidence of attention-deficit/hyperactivity disorder among adults and children of different racial and ethnic groups. JAMA Netw Open. 2019;2(11):e1914344. doi:10.1001/jamanetworkopen.2019.14344
+
+4. Kannarkat JT, Torous J. Rebalancing controlled substance regulations in telemedicine. JAMA Health Forum. 2023;4(10):e233251. doi:10.1001/jamahealthforum.2023.3251
+
+5. Drug Enforcement Administration. Fourth temporary extension of COVID-19 telemedicine flexibilities for prescription of controlled medications. Federal Register. Published December 31, 2025. Accessed May 5, 2026. https://www.federalregister.gov/documents/2025/12/31/2025-24123/fourth-temporary-extension-of-covid-19-telemedicine-flexibilities-for-prescription-of-controlled
+
+6. Witrick B, Zhang D, Su D, Li Y, McCall WV, Hendricks B, et al. Medical expenditures associated with attention-deficit/hyperactivity disorder among adults in the United States by age, 2015-2019. J Gen Intern Med. 2023;38(9):2082-2090. doi:10.1007/s11606-023-08075-w
+
+7. Currie J, Malinovskaya A. Manufacturing supply chains and imports in the ADHD drug shortage. JAMA Health Forum. 2026;7(3):e260041. doi:10.1001/jamahealthforum.2026.0041
+
+8. Agency for Healthcare Research and Quality. Medical Expenditure Panel Survey (MEPS). Agency for Healthcare Research and Quality. Accessed May 5, 2026. https://meps.ahrq.gov/mepsweb/
+
+9. Coker TR, Elliott MN, Toomey SL, Schwebel DC, Cuccaro P, Tortolero Emery S, et al. Racial and ethnic disparities in ADHD diagnosis and treatment. Pediatrics. 2016;138(3):e20160407. doi:10.1542/peds.2016-0407
+
+10. Cummings JR, Zhang X, Gandré C, Morsella A, Shields-Zeeman L, Winkelmann J, et al. Challenges facing mental health systems arising from the COVID-19 pandemic: evidence from 14 European and North American countries. Health Policy. 2023;136:104878. doi:10.1016/j.healthpol.2023.104878
+
+11. Creedon TB, Wen H, Ali MM, Haffajee RL. Trends in telehealth initiation of prescription stimulants for child and adult enrollees in Medicaid and CHIP during COVID-19. Health Aff (Millwood). 2025;44(8):996-1004. doi:10.1377/hlthaff.2024.01659
+
+12. American Society of Addiction Medicine. Optimizing Telehealth Access to Addiction Care. American Society of Addiction Medicine; 2022. Accessed May 5, 2026. https://downloads.asam.org/sitefinity-production-blobs/docs/default-source/public-policy-statements/2022-optimizing-telehealth-access-to-addiction-care-board-approved.pdf
+
