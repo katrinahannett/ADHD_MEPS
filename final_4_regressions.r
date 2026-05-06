@@ -352,3 +352,68 @@ results2_gt <- results2_clean %>%
 
 results2_gt
 gtsave(results2_gt, "Model9_Table.docx")
+
+
+
+# ---- DIAGNOSTICS FOR MODEL 8 and 9 ----
+
+pdf(
+  "Supplemental_Model_Diagnostics.pdf",
+  width = 10,
+  height = 8
+)
+
+# Arrange plots in 2x2 layout
+par(mfrow = c(2, 2))
+
+### -----------------------------
+### MODEL 8
+### -----------------------------
+
+# Deviance residuals
+res8 <- residuals(model8, type = "deviance")
+
+# Residuals vs fitted
+plot(
+  fitted(model8),
+  res8,
+  xlab = "Fitted values",
+  ylab = "Deviance residuals",
+  main = "Figure S1. Model 8 Residuals vs Fitted"
+)
+abline(h = 0, col = "red", lwd = 2)
+
+# Q-Q plot
+qqnorm(
+  res8,
+  main = "Figure S2. Model 8 Q-Q Plot"
+)
+qqline(res8, col = "red", lwd = 2)
+
+
+### -----------------------------
+### MODEL 9
+### -----------------------------
+
+# Deviance residuals
+res9 <- residuals(model9, type = "deviance")
+
+# Residuals vs fitted
+plot(
+  fitted(model9),
+  res9,
+  xlab = "Fitted values",
+  ylab = "Deviance residuals",
+  main = "Figure S3. Model 9 Residuals vs Fitted"
+)
+abline(h = 0, col = "red", lwd = 2)
+
+# Q-Q plot
+qqnorm(
+  res9,
+  main = "Figure S4. Model 9 Q-Q Plot"
+)
+qqline(res9, col = "red", lwd = 2)
+
+# Close PDF device
+dev.off()
