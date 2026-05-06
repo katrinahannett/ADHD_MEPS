@@ -3,14 +3,14 @@ title: "Changes in ADHD Medication Utilization Among U.S. Adults Following COVID
 author: "Brian T Ruan, Simran Rajpal, Katrina Hannett, Nitya Koduri, Shikhar Shrestha"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
-    toc: true
-    toc_depth: 4
   html_document:
     toc: true
     toc_depth: 4
     toc_float: true
     code_folding: hide
+  pdf_document:
+    toc: true
+    toc_depth: 4
 always_allow_html: true
 ---
 
@@ -29,7 +29,6 @@ knitr::opts_chunk$set(
 
 
 <!-- This is how you add comments in your Markdown file. Anything appearing here will not appear when you Knit this file. If you need to leave comments for yourself as you work on this document, you can use this technique.-->
-
 
 ### Ready the Workspace
 
@@ -760,22 +759,18 @@ fyc_clean <- read.csv("cleaned_fyc_adhd_data.csv")
 # Abstract
 
  **Background**: Attention-deficit hyperactivity disorder (ADHD) affects approximately 11% of U.S. children and 6% of U.S. adults and is associated with substantial healthcare and economic burden. The COVID-19 pandemic introduced major shifts in care delivery, including expanded telehealth prescribing, yet population-level data on whether these changes affected ADHD medication utilization patterns are limited.
-  <!-- Replace this text with your Background text -->
  
  
- **Methods**: We conducted a retrospective cross-sectional analysis using nationally representative Medical Expenditure Panel Survey (MEPS) data from 2019 and 2021. The study sample included non-Medicare beneficiaries aged less than 65 years with a documented ADHD diagnosis (unweighted N = 962; weighted N = 14,534,825). The primary outcome was annual ADHD-related prescription fills per person-year. Survey-weighted quasi-Poisson and log-linked gamma regression models were used to estimate differences in medication utilization and spending, adjusting for prespecified sociodemographic covariates including age, sex, race, insurance type, and income.
-
-
- <!-- Replace this text with your Methods text -->
+ **Methods**: We conducted a retrospective cross-sectional analysis using nationally representative Medical Expenditure Panel Survey (MEPS) data from 2019 and 2021. The study sample included non-Medicare beneficiaries aged ≤65 years with a documented ADHD diagnosis (unweighted N = 962; weighted N = 14,534,825). The primary outcome was annual ADHD-related prescription fills per person-year. Survey-weighted quasi-Poisson and log-linked gamma regression models were used to estimate differences in medication utilization and spending, adjusting for prespecified sociodemographic covariates including age, sex, race, insurance type, and income.
  
  
-**Results**: NEEDS TO BE ADDED !!!!!
+**Results**: In the fully adjusted model, ADHD medication utilization did not differ significantly between 2019 and 2021 after sequential adjustment for demographic and socioeconomic factors (incidence rate ratio [IRR] 1.00, 95% CI 0.79–1.27). Race was the strongest predictor of utilization, as Black participants (IRR 0.49, 95% CI 0.29–0.84)had significantly lower prescription fill rates compared with White participants. 
  
  
  **Conclusion**: ADHD medication utilization among U.S. adults remained stable following COVID-19 telehealth expansion, suggesting that policy-driven increases in access to care preserved continuity of treatment rather than increasing overall utilization. Persistent racial disparities highlight the need for equity-focused strategies to ensure that telehealth expansion translates into more equitable ADHD care.
- 
 
-# Introduction
+
+# Introduction - NEED TO UPDATE + SUPERSCRIPT
 Attention-deficit hyperactivity disorder (ADHD) affects an estimated 11% of children and 6% of adults in the United States and is associated with substantial clinical and economic burden, including increased healthcare utilization, pharmaceutical expenditures, and reduced productivity<sup>1,2</sup>. Over the past decade, improved diagnostic awareness and evolving clinical practices have contributed to rising prevalence estimates<sup>3</sup>; however, national trends in treatment patterns and their downstream economic implications remain incompletely characterized.
 
 The COVID-19 pandemic introduced a major structural shift in healthcare delivery, including the rapid expansion of telehealth and the temporary relaxation of prescribing regulations for controlled substances.<sup>4</sup> These policy changes may have reduced barriers to ADHD diagnosis and treatment by enabling remote evaluation and prescribing.<sup>5</sup> At the same time, broader pandemic-related disruptions—including shifts in healthcare-seeking behavior, mental health demand, and medication supply variability—may have independently influenced ADHD care patterns, making the net of telehealth expansion on medication utilization difficult to isolate.
@@ -788,9 +783,13 @@ Using nationally representative data from the Medical Expenditure Panel Survey (
 
 # Methods
 
-Study design and data source. We conducted a retrospective, cross-sectional analysis using data from the Medical Expenditure Panel Survey (MEPS). MEPS is a nationally representative survey of the U.S. civilian noninstitutionalized population that collects detailed information on healthcare utilization, expenditures, prescription medications, and sociodemographic characteristics through repeated household interviews and medical provider verification. Four MEPS component files were used: the Household Component Full-Year Consolidated data (FYC), the Household Component Medical Conditions data (COND), the Household Component Event Prescribed Medications data (RX), and the Condition-Event Link file (CLNK). The variables extracted from FYC are in Supplemental Table 1; all variables were extracted from COND, RX, and CLNK files.
+## Study design and data source. 
+We conducted a retrospective repeated cross-sectional analysis using data from the Medical Expenditure Panel Survey (MEPS), a nationally representative survey of the U.S. civilian noninstitutionalized population administered by the Agency for Healthcare Research and Quality (AHRQ). MEPS collects detailed information on healthcare utilization, expenditures, prescription medications, insurance coverage, and sociodemographic characteristics through repeated household interviews supplemented by medical provider and pharmacy verification. Because MEPS incorporates a complex multistage probability sampling design, analyses can generate nationally representative estimates when survey weights are applied.
 
-Inclusion and exclusion criteria. The study sample included individuals aged less than 65 years who were not Medicare beneficiaries and had a documented diagnosis of ADHD, identified using International Classification of Diseases, 10th Revision, Clinical Modification (ICD-10-CM) code F90. Medicare beneficiaries were excluded due to insufficient sample size to support reliable survey-weighted estimates in this subgroup. Stimulant and non-stimulant medications approved by the U.S. Food and Drug Administration (FDA) for the treatment of ADHD were identified using National Drug Codes (NDCs; see Supplemental File 1). The CLNK file was used to link prescribed medications in the RX file to an ADHD diagnosis in the COND file, ensuring that only medications prescribed for the indication of ADHD were included. The sample selection process is summarized in Figure 1.
+Four MEPS component files were used for each study year: the Household Component Full-Year Consolidated file (FYC), Medical Conditions file (COND), Prescribed Medicines Event file (RX), and Condition-Event Link file (CLNK). Variables extracted from the FYC file are listed in Supplemental Table 1; all variables from the COND, RX, and CLNK files were evaluated for cohort construction and medication linkage.
+
+## Inclusion and exclusion criteria. 
+The study sample included individuals aged ≤65 years who were not Medicare beneficiaries and had a documented diagnosis of ADHD, identified using International Classification of Diseases, 10th Revision, Clinical Modification (ICD-10-CM) code F90. Medicare beneficiaries were excluded due to insufficient sample size to support reliable survey-weighted estimates in this subgroup. Stimulant and non-stimulant medications approved by the U.S. Food and Drug Administration (FDA) for the treatment of ADHD were identified using National Drug Codes (NDCs; see Supplemental File 1). The CLNK file was used to link prescribed medications in the RX file to an ADHD diagnosis in the COND file, ensuring that only medications prescribed for the indication of ADHD were included. The sample selection process is summarized in Figure 1.
 
 ```{r}
 # ---- SELECTION ----
@@ -927,22 +926,24 @@ flowchart
 ```
 
 
-Independent Variables. Independent variables were selected based on previous studies of economic outcomes with ADHD and were recorded to ensure adequate stratum sizes. Educational attainment was dichotomized at the level of high school graduation or equivalent. The "poor/negative" and "near-poor" poverty categories were collapsed into a single "very low income" category.
+## Independent Variables. 
+Independent variables were selected based on previous studies of economic outcomes with ADHD and were recorded to ensure adequate stratum sizes. Educational attainment was dichotomized as high school graduation or less versus some college or higher education to improve interpretability and reduce sparse subgroup counts. Poverty categories were derived from MEPS poverty status variables, and the “poor/negative” and “near-poor” categories were combined into a single “very low income” category due to similar socioeconomic characteristics and limited sample sizes. Insurance status was categorized as private insurance only, public insurance only, dual public and private coverage, or uninsured based on MEPS full-year insurance variables. Medicare beneficiaries were excluded from analysis; therefore, public insurance primarily reflected Medicaid or other non-Medicare public coverage.
 
-Exposure and outcome. The primary exposure was a binary indicator for the time period: pre-COVID (2019) versus post-COVID (2021). The primary outcome was ADHD medication utilization, defined as the number of ADHD-related prescription fills per person-year. This count-based measure captures treatment intensity and engagement with pharmacologic management.
+## Exposure and outcome. 
+The primary exposure was a binary indicator for the time period: pre-COVID (2019) versus post-COVID (2021). The primary outcome was ADHD medication utilization, defined as the number of ADHD-related prescription fills per person-year. This count-based measure captures treatment intensity and engagement with pharmacologic management.
 
-Covariates. Covariates were selected based on a directed acyclic graph (DAG) informed by prior literature and conceptual relationships (Figure 2). The primary adjustment set included age, sex, race, ethnicity, educational attainment, and socioeconomic status. Access to care and healthcare utilization were conceptualized as mediators of the relationship between COVID-era policy changes and prescription fills and were therefore excluded from the primary adjustment set to avoid overadjustment bias.
-
+## Covariates. 
+Covariates were selected based on a directed acyclic graph (DAG) informed by prior literature and conceptual relationships (Figure 2). The primary adjustment set included age, sex, race, ethnicity, educational attainment, and socioeconomic status. Access to care and healthcare utilization were conceptualized as mediators of the relationship between COVID-era policy changes and prescription fills and were therefore excluded from the primary adjustment set to avoid overadjustment bias.
 
 ```{r DAG, fig.align = 'center', out.width = "40%", fig.cap = "**Figure 2:** My DAG"}
 #knitr::include_graphics(here::here("DAG.png"))
 #insert dag
-
 ```
 
 
 
-Statistical analysis. Summary statistics are presented as means with standard deviations for continuous variables and counts with proportions for categorical variables. Differences between the pre- and post-COVID periods were assessed using Rao-Scott adjusted Pearson chi-squared tests for categorical variables and design-based Kruskal-Wallis tests for continuous variables.
+## Statistical analysis. 
+Summary statistics are presented as means with standard deviations for continuous variables and counts with proportions for categorical variables. Differences between the pre- and post-COVID periods were assessed using Rao-Scott adjusted Pearson chi-squared tests for categorical variables and design-based Kruskal-Wallis tests for continuous variables.
 
 Because the primary outcome is a count variable with expected overdispersion, survey-weighted quasi-Poisson regression was used to estimate the association between COVID period and ADHD prescription fills. A series of nested models with sequential covariate adjustment were constructed, and results are reported as incidence rate ratios (IRRs) with 95% confidence intervals. Model diagnostics included assessment of overdispersion and goodness of fit. Sensitivity analyses evaluated alternative model specifications and adjustment sets.
 
