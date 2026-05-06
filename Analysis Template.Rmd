@@ -919,7 +919,9 @@ flowchart <- grViz(glue("
     {{ rank = same; d; x3 }}
   }}
 "))
+```
 
+```{r fig.cap="Figure 1. Inclusion and exclusion criteria for analysis and subset analysis."}
 flowchart
 ```
 
@@ -933,7 +935,7 @@ The primary exposure was a binary indicator for the time period: pre-COVID (2019
 ## Covariates. 
 Covariates were selected based on a directed acyclic graph (DAG) informed by prior literature and conceptual relationships (Figure 2). The primary adjustment set included age, sex, race, ethnicity, educational attainment, and socioeconomic status. Access to care and healthcare utilization were conceptualized as mediators of the relationship between COVID-era policy changes and prescription fills and were therefore excluded from the primary adjustment set to avoid overadjustment bias.
 
-```{r DAG, fig.align = 'center', out.width = "40%", fig.cap = "**Figure 2:** My DAG"}
+```{r DAG, fig.align = 'center', out.width = "40%", fig.cap = "**Figure 2:** Directed Acyclic Graph"}
 knitr::include_graphics(here::here("DAG.pdf"))
 #insert dag
 ```
@@ -1405,7 +1407,9 @@ table1 <- tbl_svysummary(
   ) %>%
   add_p() %>%
   bold_labels()
+```
 
+```{r tbl-cap="Demographic characteristics among ADHD cohort in 2019 and 2021"}
 table1
 ```
 
@@ -1467,7 +1471,8 @@ table2 <- tbl_svysummary(
     footnote = "Participants who were on different formulations of the same 
     drug (e.g., normal and extended-release) are characterized as using 2 
     unique ADHD drugs.")
-
+```
+```{r tbl-cap="ADHD medication utilization and expenditures among cohort who have at least one fill in either 2019 or 2021"}
 table2
 ```
 
@@ -1540,6 +1545,8 @@ table3 <- tbl_svysummary(
     and not under \"Mixed therapy.\""
   )
 
+```
+```{r tbl-cap="Distribution of ADHD medication classes among individuals with ≥1 prescription fill in 2019 and 2021"}
 table3
 ```
 
@@ -1547,7 +1554,7 @@ table3
 
 Stepwise model construction is shown in Table 4. Model 1 included year alone. Models 2–8 progressively added age group, sex, race, ethnicity, education, insurance status, and poverty category to assess the stability of the year effect and identify potential confounders. Across all models, the association between study year and ADHD medication utilization remained nonsignificant, suggesting that observed utilization patterns were robust to adjustment for sociodemographic characteristics.
 
-```{r Table 4, fig.align = 'center', out.width = "40%", fig.cap = "**Figure 2:** My DAG"}
+```{r Table 4, fig.align = 'center', out.width = "40%", fig.cap = "**Table 4:** Stepwise model construction and covariate inclusion"}
 knitr::include_graphics(here::here("Table 4.pdf"))
 ```
 
@@ -1656,8 +1663,9 @@ results_gt <- results_clean %>%
     source_note = md("IRR = incidence rate ratio; CI = confidence interval. Model adjusted for year, age, sex, race, education, insurance status, and poverty category.")
   )
 
+```
+```{r tbl-cap="Survey-weighted quasi-Poisson regression of ADHD medication fills (Model 8)"}
 results_gt
-
 ```
 
 Race was the strongest and most consistent predictor of ADHD medication utilization. Compared with White participants, Black participants had significantly lower fill rates with 43% less fills (IRR 0.57, 95% CI 0.41–0.79, p = 0.001). Individuals categorized as Other race had 36% lower fill rates compared to White participants although those results were not significant. (IRR 0.64, 95% CI 0.34–1.20, p 0.163). Age group, sex, education, and insurance status were not significantly associated with utilization after full adjustment. 
@@ -1728,7 +1736,7 @@ results2_gt <- results2_clean %>%
     p_value = md("**p-value**")
   ) %>%
   tab_header(
-    title = md("**Table X. Sensitivity analysis restricted to individuals with at least one ADHD medication fill (Model 9)**")
+    title = md("**Table 6. Sensitivity analysis restricted to individuals with at least one ADHD medication fill (Model 9)**")
   ) %>%
   tab_options(
     table.font.names = "Arial",
