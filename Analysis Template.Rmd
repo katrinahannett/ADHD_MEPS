@@ -8,9 +8,6 @@ output:
     toc_depth: 4
     toc_float: true
     code_folding: hide
-  pdf_document:
-    toc: true
-    toc_depth: 4
 always_allow_html: true
 ---
 
@@ -770,15 +767,16 @@ fyc_clean <- read.csv("cleaned_fyc_adhd_data.csv")
  **Conclusion**: ADHD medication utilization among U.S. adults remained stable following COVID-19 telehealth expansion, suggesting that policy-driven increases in access to care preserved continuity of treatment rather than increasing overall utilization. Persistent racial disparities highlight the need for equity-focused strategies to ensure that telehealth expansion translates into more equitable ADHD care.
 
 
-# Introduction - NEED TO UPDATE + SUPERSCRIPT
-Attention-deficit hyperactivity disorder (ADHD) affects an estimated 11% of children and 6% of adults in the United States and is associated with substantial clinical and economic burden, including increased healthcare utilization, pharmaceutical expenditures, and reduced productivity<sup>1,2</sup>. Over the past decade, improved diagnostic awareness and evolving clinical practices have contributed to rising prevalence estimates<sup>3</sup>; however, national trends in treatment patterns and their downstream economic implications remain incompletely characterized.
+# Introduction
+Attention-deficit hyperactivity disorder (ADHD) affects an estimated 11% of children and 6% of adults in the United States and is associated with substantial clinical and economic burden, including increased healthcare utilization, pharmaceutical expenditures, and reduced productivity<sup>1,2</sup>. Over the past decade, improved diagnostic awareness and evolving clinical practices have contributed to rising prevalence estimates; however, national trends in treatment patterns and their downstream economic implications remain incompletely characterized<sup>3</sup>.
 
-The COVID-19 pandemic introduced a major structural shift in healthcare delivery, including the rapid expansion of telehealth and the temporary relaxation of prescribing regulations for controlled substances.<sup>4</sup> These policy changes may have reduced barriers to ADHD diagnosis and treatment by enabling remote evaluation and prescribing.<sup>5</sup> At the same time, broader pandemic-related disruptions—including shifts in healthcare-seeking behavior, mental health demand, and medication supply variability—may have independently influenced ADHD care patterns, making the net of telehealth expansion on medication utilization difficult to isolate.
+The COVID-19 pandemic introduced a major structural shift in healthcare delivery, including the rapid expansion of telehealth and the temporary relaxation of prescribing regulations for controlled substances. In March 2020, the Drug Enforcement Administration (DEA), in coordination with the Department of Health and Human Services (HHS), temporarily waived the Ryan Haight Act requirement for an initial in-person evaluation prior to prescribing Schedule II–V controlled substances via telemedicine during the Public Health Emergency<sup>4,5</sup>. These policy changes may have reduced barriers to ADHD diagnosis and treatment by enabling remote evaluation and prescribing.
 
-Existing literature on telehealth expansion has largely focused on pediatric populations, private insurance datasets, or general mental health services, leaving a gap in nationally representative analyses that span the age spectrum and capture diverse payer sources. Understanding how ADHD medication utilization changed following COVID-era telehealth expansion is critical for informing prescribing policy, improving access to care, and identifying persistent disparities across sociodemographic groups.<sup>6,7</sup>
+ADHD represents a particularly important condition in the context of telehealth expansion because first-line stimulant medications are classified as Schedule II controlled substances and historically required in-person evaluation prior to prescribing under the Ryan Haight Act. The rapid shift to remote ADHD evaluation and prescribing generated both optimism regarding improved access to care and concern regarding potential overprescribing, misuse, and diversion, particularly among young adults<sup>4</sup>. At the same time, broader pandemic-related disruptions, including shifts in healthcare-seeking behavior, increased mental health demand, and medication supply variability, may have independently influenced ADHD care patterns, making the net effect of telehealth expansion on medication utilization difficult to isolate<sup>6</sup>. Despite the prominence of ADHD in policy discussions surrounding telehealth prescribing, population-level evidence evaluating changes in ADHD medication utilization following these regulatory shifts remains limited.
 
-Using nationally representative data from the Medical Expenditure Panel Survey (MEPS), we evaluated changes in ADHD medication utilization and spending among U.S. individuals aged less than 65 years before (2019) and after (2021) COVID-era telehealth expansion. We hypothesized that medication utilization increased in the post-COVID period and that changes varied by sociodemographic and access-related factors.
+Existing literature on telehealth expansion has largely focused on pediatric populations, private insurance datasets, or broader mental health services, leaving a gap in nationally representative analyses that span diverse payer sources and age groups. Additionally, prior work evaluating COVID-era telehealth expansion has primarily focused on opioid prescribing, opioid use disorder treatment, and broader trends in depression and anxiety care<sup>7,8</sup>. These studies generally suggest that telehealth policies helped preserve continuity of mental health treatment during the pandemic. However, there remains limited nationally representative research examining how these policy changes affected ADHD populations specifically, particularly with respect to stimulant medication utilization, treatment continuity, and access to care across sociodemographic groups. Understanding how ADHD medication utilization changed following COVID-era telehealth expansion is critical for informing prescribing policy, improving access to care, and identifying persistent disparities in treatment delivery<sup>9</sup>.
 
+Using nationally representative data from the Medical Expenditure Panel Survey (MEPS), we evaluated changes in ADHD medication utilization and spending among U.S. individuals aged ≤65 years before (2019) and after (2021) COVID-era telehealth expansion. We hypothesized that ADHD medication utilization increased in the post-COVID period and that changes varied by sociodemographic and access-related factors.
 
 
 # Methods
@@ -936,7 +934,7 @@ The primary exposure was a binary indicator for the time period: pre-COVID (2019
 Covariates were selected based on a directed acyclic graph (DAG) informed by prior literature and conceptual relationships (Figure 2). The primary adjustment set included age, sex, race, ethnicity, educational attainment, and socioeconomic status. Access to care and healthcare utilization were conceptualized as mediators of the relationship between COVID-era policy changes and prescription fills and were therefore excluded from the primary adjustment set to avoid overadjustment bias.
 
 ```{r DAG, fig.align = 'center', out.width = "40%", fig.cap = "**Figure 2:** My DAG"}
-#knitr::include_graphics(here::here("DAG.png"))
+knitr::include_graphics(here::here("DAG.pdf"))
 #insert dag
 ```
 
@@ -1281,7 +1279,6 @@ The final adjusted model included:
 
 ```{r, warning=FALSE, message=FALSE}
 # Final adjusted model
-
 model8 <- svyglm(
   adhd_fills ~ year + AGE53X + sex + race + education + has_insurance + POVCAT,
   design = design_step4,
@@ -1368,12 +1365,11 @@ Results were directionally similar to the primary analysis, suggesting that find
 # Results
 
 ## Sample population characteristics
-The analytic sample comprised nationally representative cross-sectional samples of U.S. individuals aged less than 65 years with ADHD in 2019  (weighted N = 7,136,410) and 2021 (weighted N = 7,398,415) (Table 1). Sociodemographic characteristics were broadly similar between the two periods, with observed differences primarily reflecting shifts in age distribution.
+The analytic sample comprised nationally representative cross-sectional samples of U.S. individuals aged ≤65 years with ADHD in 2019  (weighted N = 7,136,410) and 2021 (weighted N = 7,398,415) (Table 1). Sociodemographic characteristics were broadly similar between the two periods, with observed differences primarily reflecting shifts in age distribution.
 
 Median age increased from 23 years (SD = 15) in 2019 to 25 years (SD = 15) in 2021 (p = 0.005), and the distribution of age groups differed between years (p = 0.008): the proportion of children (<18 years) decreased from 50% to 41%, with a corresponding increase from 50% to 59% among adults. The distribution of age-sex subgroups also differed significantly (p = 0.015), driven primarily by a relative increase in adult male representation.
 
 Racial and ethnic composition was stable across years. The distribution of race did not differ significantly (p = 0.70), nor did ethnicity (Hispanic vs. non-Hispanic; p = 0.70). Educational attainment was similar, with approximately 70–73% of participants having a college education or greater (p = 0.50). Nearly all individuals were insured in both years (98–99%; p = 0.8), with no significant difference in insurance type (p > 0.9); private insurance was the most common category in both periods. Household income distribution, as measured by poverty category, was also comparable (p = 0.80), with the largest proportion of individuals in the high-income category in both samples.
-
 
 ```{r, warning=FALSE, message=FALSE}
 table1 <- tbl_svysummary(
@@ -1420,6 +1416,7 @@ Among individuals with at least one prescription fill, ADHD medication utilizati
 The proportion of individuals using two unique ADHD medications increased numerically from 2.2% in 2019 to 5.8% in 2021, though this did not reach statistical significance (p = 0.08).
 
 Total ADHD medication spending, out-of-pocket spending, and the out-of-pocket share were similar between years (total spending, p = 0.08; out-of-pocket spending, p = 0.40; out-of-pocket share, p = 0.20). Private insurance spending decreased numerically while Medicaid spending increased, but neither difference was statistically significant (private insurance, p = 0.06; Medicaid, p = 0.20).
+
 
 ```{r, warning=FALSE, message=FALSE}
 # ---- TABLE 2 ----
@@ -1548,18 +1545,230 @@ table3
 
 ## Multivariable analysis
 
-!!! DO THIS ONCE NITYA FINISHED!
+Stepwise model construction is shown in Table 4. Model 1 included year alone. Models 2–8 progressively added age group, sex, race, ethnicity, education, insurance status, and poverty category to assess the stability of the year effect and identify potential confounders. Across all models, the association between study year and ADHD medication utilization remained nonsignificant, suggesting that observed utilization patterns were robust to adjustment for sociodemographic characteristics.
 
+```{r Table 4, fig.align = 'center', out.width = "40%", fig.cap = "**Figure 2:** My DAG"}
+knitr::include_graphics(here::here("Table 4.pdf"))
+```
+
+In the unadjusted model (Model 1), the post-COVID period (2021) was not associated with a significant difference in ADHD medication fills compared with 2019 (p = 0.95). Sequential adjustment for age group (Model 2), sex (Model 3), race (Model 4), education (Model 6), insurance status (Model 7), and poverty category (Model 8) did not materially alter this finding. Ethnicity was evaluated separately in Model 5 because of collinearity with race and was not significantly associated with medication utilization.
+
+The fully adjusted model (Model 8) included year, age group, sex, race, education, insurance status, and poverty category (POVCAT) (Table 5). In this model, ADHD medication fill rates in 2021 remained similar to those observed in 2019 (IRR 1.00, 95% CI 0.79–1.27, p = 0.995). Age group and sex were also not significantly associated with medication utilization. Compared with children (<18 years), adults demonstrated a nonsignificant increase in fill rates (IRR 1.19, 95% CI 0.77–1.83), while males had similar utilization compared with females (IRR 1.04, 95% CI 0.78–1.39).
+
+```{r}
+#Model 8 - Adding Income (Final)
+model8 <- svyglm(
+  adhd_fills ~ year + age_group + sex + race + education + has_insurance 
+                    + povcat + year:has_insurance,
+  design = design_step4,
+  family = quasipoisson()
+)
+
+summary(model8)
+
+# TODO: add residuals, diagnostics, etc.
+m8_residuals <- residuals(model8, type = "deviance")
+plot(m8_residuals, main = "Deviance Residuals", ylab = "Deviance Residuals", xlab = "Index")
+
+# qq plot of resids
+m8_qq <- qqnorm(m8_residuals)
+qqline(m8_residuals, col = "red", lty = "dashed")
+
+# hist of resids
+hist(m8_residuals, breaks = 30, main = "Histogram of Residuals", xlab = "Deviance Residuals")
+
+# plot of resids vs fitted
+plot(m8_fitted, m8_residuals, main = "Residuals vs Fitted Values", xlab = "Fitted Values", ylab = "Deviance Residuals")
+abline(h = 0, lty = "dashed", col = "red")
+
+#Converting to IRRS
+exp(coef(model8))
+
+# these are probably not accurate:
+
+# ADHD prescription fills in 2021 were about 2.5% higher than in 2019. 
+# For each additional year of age, ADHD fills increase by about 1.2%. 
+# Males had about 3% higher ADHD fill rates than females. 
+# Black participants had about 58% lower ADHD fill rates than White.
+# Other race groups had about 64% lower fills than White participants. 
+# People with high school education or less had about 43% lower 
+# ADHD fill compared with college-educated individuals. 21% higher 
+# fill rates than Medicaid-only. "Other public" 71% lower fill 
+# compared to Medicaid-only. "Private- only" had 45% lower fill rates than
+#  Medicaid-only. "Uninsured" had 31% lower fill rates than 
+# Medicaid-only. Income has almost no effect per $1 increase.
+
+#Confidence Intervals
+confint.default(model8)
+ci <- exp(confint.default(model8))
+summary (ci)
+
+#Results Table
+
+coef_table <- coef(summary(model8))
+
+results <- data.frame(
+  term = names(coef(model8)),
+  IRR = exp(coef(model8)),
+  CI_low = exp(confint.default(model8)[,1]),
+  CI_high = exp(confint.default(model8)[,2]),
+  p_value = 2 * pt(
+    abs(coef_table[, "t value"]),
+    df = degf(design_step4),
+    lower.tail = FALSE
+  )
+)
+
+results
+
+
+# ---- CLEANED TABLE MODEL 8 ----
+
+results_clean <- results %>%
+  mutate(
+    IRR = round(IRR, 2),
+    CI = paste0(round(CI_low, 2), "–", round(CI_high, 2)),
+    p_value = ifelse(p_value < 0.001, "<0.001", round(p_value, 3))
+  ) %>%
+  select(term, IRR, CI, p_value)
+
+results_gt <- results_clean %>%
+  gt() %>%
+  cols_label(
+    term = md("**Characteristic**"),
+    IRR = md("**IRR**"),
+    CI = md("**95% CI**"),
+    p_value = md("**p-value**")
+  ) %>%
+  tab_options(
+    table.font.names = "Arial",
+    table.font.size = 12,
+    heading.title.font.size = 13,
+    column_labels.font.weight = "bold",
+    row_group.font.weight = "bold",
+    table.border.top.width = px(2),
+    table.border.bottom.width = px(2),
+    column_labels.border.top.width = px(2),
+    column_labels.border.bottom.width = px(2),
+    row.striping.include_table_body = FALSE
+  ) %>%
+  tab_source_note(
+    source_note = md("IRR = incidence rate ratio; CI = confidence interval. Model adjusted for year, age, sex, race, education, insurance status, and poverty category.")
+  )
+
+results_gt
+
+```
+
+Race was the strongest and most consistent predictor of ADHD medication utilization. Compared with White participants, Black participants had significantly lower fill rates with 43% less fills (IRR 0.57, 95% CI 0.41–0.79, p = 0.001). Individuals categorized as Other race had 36% lower fill rates compared to White participants although those results were not significant. (IRR 0.64, 95% CI 0.34–1.20, p 0.163). Age group, sex, education, and insurance status were not significantly associated with utilization after full adjustment. 
+
+A significant interaction between study year and insurance status was observed (IRR 0.16, 95% CI 0.10–0.26, p < 0.001), indicating that the association between insurance status and ADHD medication utilization differed between 2019 and 2021. Specifically, uninsured individuals experienced a relative reduction in prescription fill rates in 2021 compared with insured individuals.
+
+Poverty category was not significantly associated with ADHD medication utilization after adjustment for demographic and access-related factors. Compared with the very low-income reference group, low-income (IRR 0.89, 95% CI 0.60–1.34), middle-income (IRR 1.05, 95% CI 0.78–1.42), and high-income individuals (IRR 0.78, 95% CI 0.52–1.18) demonstrated no statistically significant differences in ADHD prescription fill rates.
 
 ### Sensitivity analysis
 
 To evaluate whether findings differed among individuals actively receiving pharmacologic treatment, a sensitivity analysis was conducted, restricting the sample to participants with at least one ADHD medication fill (Model 9). 
 
-!!! FINISH !!!
+```{r}
+model9 <- svyglm(
+  adhd_fills ~ year + age_group + sex + race + education + has_insurance 
+                    + povcat + year:has_insurance,
+  design = design_step5,
+  family = quasipoisson()
+)
+summary(model9)
+
+m9_residuals <- residuals(model9, type = "deviance")
+plot(m9_residuals, main = "Deviance Residuals", ylab = "Deviance Residuals", xlab = "Index")
+
+m9_qq <- qqnorm(m9_residuals)
+qqline(m9_residuals, col = "red", lty = "dashed")
+
+hist(m9_residuals, breaks = 30, main = "Histogram of Residuals", xlab = "Deviance Residuals")
+
+m9_fitted <- fitted(model9)
+plot(m9_fitted, m9_residuals, main = "Residuals vs Fitted Values", xlab = "Fitted Values", ylab = "Deviance Residuals")
+abline(h = 0, lty = "dashed", col = "red")
+
+exp(coef(model9))
+confint.default(model9)
+ci2 <- exp(confint.default(model9))
+summary (ci2)
+
+coef_table2 <- coef(summary(model9))
+
+results2 <- data.frame(
+  term = rownames(coef_table2),
+  IRR = exp(coef(model9)),
+  CI_low = ci2[, 1],
+  CI_high = ci2[, 2],
+  p_value = 2 * pt(
+    abs(coef_table2[, "t value"]),
+    df = degf(design_step5),
+    lower.tail = FALSE
+  )
+)
+
+# ---- CLEANED TABLE MODEL 9 ----
+results2_clean <- results2 %>%
+  mutate(
+    IRR = round(IRR, 2),
+    CI = paste0(round(CI_low, 2), "–", round(CI_high, 2)),
+    p_value = ifelse(p_value < 0.001, "<0.001", round(p_value, 3))
+  ) %>%
+  select(term, IRR, CI, p_value)
+
+results2_gt <- results2_clean %>%
+  gt() %>%
+  cols_label(
+    term = md("**Characteristic**"),
+    IRR = md("**IRR**"),
+    CI = md("**95% CI**"),
+    p_value = md("**p-value**")
+  ) %>%
+  tab_header(
+    title = md("**Table X. Sensitivity analysis restricted to individuals with at least one ADHD medication fill (Model 9)**")
+  ) %>%
+  tab_options(
+    table.font.names = "Arial",
+    table.font.size = 12,
+    heading.title.font.size = 13,
+    column_labels.font.weight = "bold",
+    row_group.font.weight = "bold",
+    table.border.top.width = px(2),
+    table.border.bottom.width = px(2),
+    column_labels.border.top.width = px(2),
+    column_labels.border.bottom.width = px(2),
+    row.striping.include_table_body = FALSE
+  ) %>%
+  tab_source_note(
+    source_note = md("IRR = incidence rate ratio; CI = confidence interval. Model 9 represents a sensitivity analysis restricted to individuals with at least one ADHD medication fill and adjusted for year, age, sex, race, education, insurance status, and poverty category.")
+  )
+
+results2_gt
+gtsave(results2_gt, "Model9_Table.docx")
+
+
+```
+Sensitivity analyses restricted to individuals with at least one ADHD medication fill are shown in Table 6 (Model 9). Similar to the primary analysis, study year remained unassociated with ADHD medication utilization after restricting the cohort to treated individuals (IRR 0.94, 95% CI 0.73–1.23, p = 0.676), suggesting that utilization intensity among individuals already receiving pharmacologic treatment did not meaningfully differ between 2019 and 2021.
+
+Race remained an important predictor of ADHD medication utilization in the restricted cohort. Compared with White participants, Black participants continued to demonstrate significantly lower prescription fill rates (IRR 0.59, 95% CI 0.40–0.86, p = 0.008), corresponding to approximately 41% lower utilization after adjustment for demographic and socioeconomic covariates. Individuals categorized as Other race also demonstrated lower fill rates relative to White participants (IRR 0.60, 95% CI 0.31–1.15), although this association was not statistically significant.
+
+Age group, sex, education, insurance status, and poverty category were not significantly associated with medication utilization in the restricted cohort. However, the interaction between study year and uninsured status remained strongly significant (IRR 0.15, 95% CI 0.09–0.25, p < 0.001), indicating substantially lower ADHD medication utilization among uninsured individuals in 2021 relative to insured individuals. Persistence of this interaction in the restricted analysis suggests that disparities associated with insurance status may reflect differences in both access to treatment initiation and continuity of pharmacologic management.
+
 
 # Discussion
 
-!! FINISH ONCE NUMBERS DONE !!!
+In this nationally representative analysis, ADHD medication utilization remained stable between 2019 and 2021 despite substantial disruptions to healthcare delivery during the COVID-19 pandemic. This finding was consistent across descriptive and multivariable analyses, with no significant difference in prescription fill rates after adjustment for demographic and socioeconomic factors (IRR 1.00, 95% CI 0.79–1.27, p = 0.995). In the context of reduced in-person care access, this stability is notable and may suggest that telehealth-enabled prescribing preserved continuity of pharmacologic treatment rather than increasing overall utilization.
+
+Despite this overall stability, persistent racial disparities in medication utilization were observed. Black participants and individuals categorized as Other race had significantly lower prescription fill rates compared with White participants, even after adjustment for socioeconomic factors. These findings are consistent with prior literature documenting underdiagnosis and undertreatment of ADHD among racial and ethnic minority populations and suggest that structural barriers to care persist across the treatment continuum<sup>9</sup>. The attenuation of this association in analyses restricted to individuals with at least one prescription fill may suggest that disparities may be driven more by differences in treatment initiation than by treatment intensity among those already engaged in care. This distinction has important implications for intervention design, as strategies to improve equity may need to target diagnostic access and prescribing entry points rather than medication management alone.
+
+Telehealth policy changes during the COVID-19 pandemic were largely implemented to preserve continuity of mental health services rather than to increase overall utilization. Across 14 countries, telehealth expansions were specifically designed to maintain service delivery during lockdowns and reduced in-person care<sup>10</sup>. In this context, the stable ADHD medication utilization observed in our study likely reflects continuity of care rather than increased treatment uptake. However, access to telehealth is not evenly distributed. Structural barriers—including limited broadband access, lower internet and smartphone use, and practices such as digital redlining—disproportionately affect Black and uninsured populations<sup>11,12</sup>. These groups are also more likely to rely on audio-only visits, which may face additional prescribing restrictions. Together, these factors may contribute to the lower ADHD medication utilization observed among these populations in our analysis.
+
+A significant interaction between study year and insurance status was also observed, indicating that disparities in medication utilization by insurance coverage may have widened during the pandemic period. Specifically, uninsured individuals demonstrated substantially lower prescription fill rates in 2021 compared with 2019, suggesting that telehealth expansion may have differentially benefited individuals with established insurance coverage. Although telehealth has the potential to reduce logistical barriers to care, access to virtual services often remains contingent on insurance coverage, digital access, and continuity within the healthcare system. These findings highlight that insurance status remains a critical determinant of treatment access and that policy changes aimed at expanding care delivery modalities may inadvertently exacerbate disparities if underlying coverage gaps are not addressed.
+
+Several secondary patterns merit brief discussion. Medicaid-related spending increased numerically while private insurance spending decreased, potentially reflecting pandemic-related shifts in employment and insurance coverage. Modest shifts in medication class distribution, including a slight increase in amphetamine prescribing and a decline in non-stimulant use, may reflect evolving prescribing practices during the early pandemic period. Because the study period precedes the amphetamine shortage beginning in late 2022, supply constraints are unlikely to explain these patterns, though such trends may have contributed to subsequent supply pressures<sup>7</sup>. Finally, the increased proportion of adults with ADHD observed in 2021 may reflect growing recognition of adult ADHD, potentially facilitated by expanded access to care; however, as diagnostic trends were not directly measured, this interpretation remains hypothesis-generating.
 
 # Limitations
 
@@ -1592,8 +1801,6 @@ B.T.R.: Conceptualization; Formal analysis (equal); Methodology; Project adminis
 
 # Institutional Review Board statement
 The study was approved as not human subject research by the Tufts Health Sciences Institutional Review Board (STUDY00006787).
-
-
 
 # References
 
