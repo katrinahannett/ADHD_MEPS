@@ -260,10 +260,11 @@ tbl5 <- mk_tbl_combined(model5)
 tbl6 <- mk_tbl_combined(model6)
 tbl7 <- mk_tbl_combined(model7)
 tbl8 <- mk_tbl_combined(model8)
+tbl9 <- mk_tbl_combined(model9)
 
 combined_table <- tbl_merge(
-  tbls = list(tbl1, tbl2, tbl3, tbl4, tbl5, tbl6, tbl7, tbl8),
-  tab_spanner = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)", "(8)"),
+  tbls = list(tbl1, tbl2, tbl3, tbl4, tbl5, tbl6, tbl7, tbl8, tbl9),
+  tab_spanner = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)", "(8)", "(9)"),
   quiet = TRUE
 ) |>
   bold_labels()
@@ -276,7 +277,7 @@ combined_table_gt
 gtsave(combined_table_gt, "exports/table4.docx")
 gtsave(combined_table_gt, "exports/table4.html")
 
-# ---- CLEANED TABLE ----
+# ---- CLEANED TABLE MODEL 8 ----
 
 results_clean <- results %>%
   mutate(
@@ -311,4 +312,43 @@ results_gt <- results_clean %>%
   )
 
 results_gt
+gtsave(results_gt, "Model8_Table.docx")
 
+# ---- CLEANED TABLE MODEL 9 ----
+results2_clean <- results2 %>%
+  mutate(
+    IRR = round(IRR, 2),
+    CI = paste0(round(CI_low, 2), "–", round(CI_high, 2)),
+    p_value = ifelse(p_value < 0.001, "<0.001", round(p_value, 3))
+  ) %>%
+  select(term, IRR, CI, p_value)
+
+results2_gt <- results2_clean %>%
+  gt() %>%
+  cols_label(
+    term = md("**Characteristic**"),
+    IRR = md("**IRR**"),
+    CI = md("**95% CI**"),
+    p_value = md("**p-value**")
+  ) %>%
+  tab_header(
+    title = md("**Table X. Sensitivity analysis restricted to individuals with at least one ADHD medication fill (Model 9)**")
+  ) %>%
+  tab_options(
+    table.font.names = "Arial",
+    table.font.size = 12,
+    heading.title.font.size = 13,
+    column_labels.font.weight = "bold",
+    row_group.font.weight = "bold",
+    table.border.top.width = px(2),
+    table.border.bottom.width = px(2),
+    column_labels.border.top.width = px(2),
+    column_labels.border.bottom.width = px(2),
+    row.striping.include_table_body = FALSE
+  ) %>%
+  tab_source_note(
+    source_note = md("IRR = incidence rate ratio; CI = confidence interval. Model 9 represents a sensitivity analysis restricted to individuals with at least one ADHD medication fill and adjusted for year, age, sex, race, education, insurance status, and poverty category.")
+  )
+
+results2_gt
+gtsave(results2_gt, "Model9_Table.docx")
