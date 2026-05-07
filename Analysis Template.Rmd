@@ -1838,4 +1838,3 @@ The study was approved as not human subject research by the Tufts Health Science
 11. Creedon TB, Wen H, Ali MM, Haffajee RL. Trends in telehealth initiation of prescription stimulants for child and adult enrollees in Medicaid and CHIP during COVID-19. Health Aff (Millwood). 2025;44(8):996-1004. doi:10.1377/hlthaff.2024.01659
 
 12. American Society of Addiction Medicine. Optimizing Telehealth Access to Addiction Care. American Society of Addiction Medicine; 2022. Accessed May 5, 2026. https://downloads.asam.org/sitefinity-production-blobs/docs/default-source/public-policy-statements/2022-optimizing-telehealth-access-to-addiction-care-board-approved.pdf
-
