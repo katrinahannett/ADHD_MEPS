@@ -791,9 +791,9 @@ The study sample included individuals aged ≤65 years who were not Medicare ben
 
 ```{r}
 # ---- SELECTION ----
-# 1. Was less than 65 in **BOTH** 2019 and 2021
+# 1. Was less than 65 in **EITHER** 2019 and 2021
 # 2. No Medicare in **EITHER** 2019 and 2021
-# 3. ADHD diagnosis in **BOTH** 2019 and 2021
+# 3. ADHD diagnosis in **EITHER** 2019 and 2021
 # 4. ADHD and RX linkage in **EITHER** 2019 and 2021
 
 # select based on criteria above
@@ -921,7 +921,7 @@ flowchart <- grViz(glue("
 "))
 ```
 
-```{r fig.cap="Figure 1. Inclusion and exclusion criteria for analysis and subset analysis."}
+```{r fig.cap="**Figure 1.** Inclusion and exclusion criteria for analysis and subset analysis."}
 flowchart
 ```
 
@@ -1406,10 +1406,10 @@ table1 <- tbl_svysummary(
     missing = "no"
   ) %>%
   add_p() %>%
-  bold_labels()
-```
+  bold_labels()%>%
+  modify_caption(
+    "**Table 1.** Demographic characteristics among ADHD cohort in 2019 and 2021")
 
-```{r tbl-cap="Demographic characteristics among ADHD cohort in 2019 and 2021"}
 table1
 ```
 
@@ -1470,9 +1470,10 @@ table2 <- tbl_svysummary(
     columns = label,
     footnote = "Participants who were on different formulations of the same 
     drug (e.g., normal and extended-release) are characterized as using 2 
-    unique ADHD drugs.")
-```
-```{r tbl-cap="ADHD medication utilization and expenditures among cohort who have at least one fill in either 2019 or 2021"}
+    unique ADHD drugs.") %>%
+  modify_caption(
+    "**Table 2.** ADHD medication utilization and expenditures among cohort who have at least one fill in either 2019 or 2021")
+
 table2
 ```
 
@@ -1543,10 +1544,10 @@ table3 <- tbl_svysummary(
     footnote = "Participants who were on different formulations of the same 
     drug (e.g., normal and extended-release) were included in the same category
     and not under \"Mixed therapy.\""
-  )
+  ) %>%
+  modify_caption(
+    "**Table 3.** Distribution of ADHD medication classes among individuals with ≥1 prescription fill in 2019 and 2021")
 
-```
-```{r tbl-cap="Distribution of ADHD medication classes among individuals with ≥1 prescription fill in 2019 and 2021"}
 table3
 ```
 
@@ -1585,6 +1586,7 @@ qqline(m8_residuals, col = "red", lty = "dashed")
 hist(m8_residuals, breaks = 30, main = "Histogram of Residuals", xlab = "Deviance Residuals")
 
 # plot of resids vs fitted
+m8_fitted <- fitted(model8)
 plot(m8_fitted, m8_residuals, main = "Residuals vs Fitted Values", xlab = "Fitted Values", ylab = "Deviance Residuals")
 abline(h = 0, lty = "dashed", col = "red")
 
@@ -1641,6 +1643,9 @@ results_clean <- results %>%
 
 results_gt <- results_clean %>%
   gt() %>%
+  tab_header(
+    title = md("**Table 5.** Survey-weighted quasi-Poisson regression of ADHD medication fills (Model 8)")
+  ) %>%
   cols_label(
     term = md("**Characteristic**"),
     IRR = md("**IRR**"),
@@ -1663,8 +1668,6 @@ results_gt <- results_clean %>%
     source_note = md("IRR = incidence rate ratio; CI = confidence interval. Model adjusted for year, age, sex, race, education, insurance status, and poverty category.")
   )
 
-```
-```{r tbl-cap="Survey-weighted quasi-Poisson regression of ADHD medication fills (Model 8)"}
 results_gt
 ```
 
@@ -1736,7 +1739,7 @@ results2_gt <- results2_clean %>%
     p_value = md("**p-value**")
   ) %>%
   tab_header(
-    title = md("**Table 6. Sensitivity analysis restricted to individuals with at least one ADHD medication fill (Model 9)**")
+    title = md("**Table 6.** Sensitivity analysis restricted to individuals with at least one ADHD medication fill (Model 9)")
   ) %>%
   tab_options(
     table.font.names = "Arial",
@@ -1797,7 +1800,7 @@ The hypothesis that changes would vary by sociodemographic factors was partially
 
 These findings indicate that while telehealth expansion may support continuity of care for individuals already receiving treatment, it is insufficient on its own to address the structural barriers that drive inequitable ADHD diagnosis and management. Policy efforts should pair telehealth access with equity-focused strategies—such as community-based ADHD screening programs, improved insurance coverage for behavioral health evaluation, and culturally responsive outreach to historically underserved populations—to ensure that expanded access translates into more equitable care. Future work should extend this analysis longitudinally and examine downstream outcomes, including healthcare expenditures and functional measures such as workplace productivity.
 
-#Declaration of conflicting interests
+# Declaration of conflicting interests
 The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
 # Funding
